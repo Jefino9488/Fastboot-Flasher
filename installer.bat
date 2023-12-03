@@ -1,14 +1,41 @@
 @echo off
+cls
+echo.
+echo -----------------------------------------------------------------------------------------------------------------------
+echo Disclaimer :
+echo This is a self developed software just to make the flashing easy and secure.
+echo.
+echo Usage :
+echo.
+echo 1. while running the exe it forms 3 folder[boot,twrp,images] if not present already.
+echo.
+echo 2. If u need to flash boot or twrp img , dont forget to add boot and twrp imgs as follows :-
+echo.
+echo      In boot folder : rename your boot as follows
+echo             ~ magisk_boot.img
+echo             ~ ksu_boot.img
+echo             ~ boot.img
+echo.
+echo      In twrp folder : rename your twrp or vendor_boot as follows
+echo             ~ vendor_boot.img
+echo             ~ twrp_vendor_boot.img
+echo.
+echo 3. Other than this just follow the process.!Returns to menu if file is missing.
+echo.
+echo for updates join @XAGAUpdates                                                    Owned by @XAGA_Community
+echo for support join @XAGA_Community                                                 Report Issues : @Jefino9488
+echo.
+echo.
+echo                                               THANK YOU
+echo -----------------------------------------------------------------------------------------------------------------------
+pause
 :menu
 setlocal
-set "SCRIPT_PATH=%CD%"
+set "SCRIPT_PATH=%~dp0"
 set "PATH=%b2eincfilepath%"
 if not exist %SCRIPT_PATH%\twrp mkdir %SCRIPT_PATH%\twrp
 if not exist %SCRIPT_PATH%\boot mkdir %SCRIPT_PATH%\boot
 if not exist %SCRIPT_PATH%\images mkdir %SCRIPT_PATH%\images
-set "TWRP_PATH=%CD%\twrp"
-set "BOOT_PATH=%CD%\boot"
-set "IMAGES_PATH=%CD%\images"
 
 if exist boot\magisk_boot.img (
     set magisk_boot=available
@@ -26,8 +53,7 @@ if exist boot\boot.img (
     set boot=missing
 )
 
-if exist twrp\vendor_boot.img (2
-
+if exist twrp\vendor_boot.img (
 	set vendor_boot=available
 ) else (
     set vendor_boot=missing
@@ -46,24 +72,35 @@ echo Main Menu.
 echo 1. Flash Full ROM
 echo 2. Flash Boot Image
 echo 3. Flash TWRP
-echo 4. Exit
+echo 4. Format Data
+echo 5. Exit
 echo.
 
 set /p option=Enter your choice (1/2/3/4):
+echo.
 
 if "%option%" equ "1" (
     set flashRom=true
+    set format=false
     set flashBoot=false
     set flashTWRP=false
 ) else if "%option%" equ "2" (
     set flashRom=false
     set flashBoot=true
+    set format=false
     set flashTWRP=false
 ) else if "%option%" equ "3" (
     set flashRom=false
     set flashBoot=false
+    set format=false
     set flashTWRP=true
 ) else if "%option%" equ "4" (
+    set format=true
+    set flashRom=false
+    set flashBoot=false
+    set flashTWRP=false
+    call :select_format
+) else if "%option%" equ "5" (
     echo Exiting script.
     timeout /nobreak /t 3 >nul 2>&1
     exit /b 1
@@ -82,7 +119,6 @@ if "%flashRom%"=="true" (
 
 
 :flash_rom
-echo.
 :select_format
 echo Data:
 echo Do you want to format data? (Y/N)
@@ -96,6 +132,11 @@ if /i "%formatData%" equ "Y" (
     timeout /nobreak /t 3 >nul 2>&1
 ) else (
     echo Skipping data formatting.
+)
+
+if "%format%"=="true" (
+    pause
+    goto menu
 )
 
 :set_default_slot
@@ -114,12 +155,25 @@ if /i "%slot%" neq "a" if /i "%slot%" neq "b" (
 echo You selected slot %slot%.
 echo.
 :flash_boot
+if exist boot\magisk_boot.img (
+    set magisk_boot=available
+) else (
+    set magisk_boot=missing
+)
+if exist boot\ksu_boot.img (
+    set ksu_boot=available
+) else (
+    set ksu_boot=missing
+)
+if exist boot\boot.img (
+    set boot=available
+) else (
+    set boot=missing
+)
 echo Boot Type:
 echo 1. Magisk [magisk_boot.img] [%magisk_boot%]
 echo 2. Ksu [ksu_boot.img] [%ksu_boot%]
 echo 3. Default [boot.img] [%boot%]
-echo.
-
 echo.
 echo Select boot image type:
 set /p bootChoice=
@@ -152,14 +206,13 @@ if "%flashBoot%"=="true" (
         echo Boot Image flashed successfully.
         fastboot reboot
         echo Restarting
-        timeout /nobreak /t 3 >nul 2>&1
+        pause
         cd ..
         call :menu
     ) else (
         echo selected boot not available
 		echo Returning to main menu
-        timeout /nobreak /t 6 >nul 2>&1
-        cd ..
+        pause
         call :menu
     )
 )
@@ -202,8 +255,7 @@ if "%flashTWRP%"=="true" (
     ) else (
         echo selected vendor_boot not available
 		echo Returning to main menu
-        timeout /nobreak /t 6 >nul 2>&1
-        cd ..
+        pause
         call :menu
     )
 )
@@ -214,7 +266,7 @@ set /p confirm=
 
 if /i "%confirm%" neq "Y" (
     echo Returning to main menu.
-    timeout /nobreak /t 3 >nul 2>&1
+    pause
     call :menu
 ) else (
     call :checker
@@ -240,17 +292,17 @@ if exist twrp\%vendorBootImage% (
 if "%flashRom%"=="true" (
     if /i "%bootimg%"=="missing" (
         echo Boot image is missing. Aborting.
-        timeout /nobreak /t 2 >nul 2>&1
+        pause
         goto :menu
     ) else if /i "%twrpimg%"=="missing" (
         echo TWRP image is missing. Aborting...
-        timeout /nobreak /t 8 >nul 2>&1
+        pause
         goto :menu
     )
 )
 
 
-set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img preloader_raw.img scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vbmeta_system.img vbmeta_vendor.img super.img logo.img"
+set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img preloader_raw.img scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vbmeta_system.img vbmeta_vendor.img super.img"
 
 
 
@@ -323,9 +375,11 @@ echo Flashing lk...
 fastboot flash lk_a lk.img
 echo lk flashed successfully.
 
-echo Flashing logo...
-fastboot flash logo_a logo.img
-echo logo flashed successfully.
+if exist logo.img (
+    echo Flashing logo...
+    fastboot flash logo_a %logoPath%
+    echo Logo flashed successfully.
+)
 
 echo Flashing mcf_ota...
 fastboot flash mcf_ota_a mcf_ota.img
@@ -398,9 +452,8 @@ pause
 pause
 fastboot reboot
 echo Restarting
-pause
 echo Returning to Main menu
-timeout /nobreak /t 2 >nul 2>&1
+pause
 cd ..
 call :menu
 
