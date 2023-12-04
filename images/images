@@ -1,0 +1,25 @@
+apusys.img
+audio_dsp.img
+ccu.img
+dpm.img
+dtbo.img
+gpueb.img
+gz.img
+lk.img
+logo.img (optional)
+mcf_ota.img
+mcupm.img
+md1img.img
+mvpu_algo.img
+pi_img.img
+preloader_raw.img
+scp.img
+spmfw.img
+sspm.img
+tee.img
+vcp.img
+vbmeta.img
+vbmeta_system.img
+vbmeta_vendor.img
+super.img
+cust.img (optional)
