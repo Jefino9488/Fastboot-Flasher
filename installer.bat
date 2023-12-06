@@ -73,7 +73,7 @@ echo 1. Flash Full ROM
 echo 2. Flash Boot Image
 echo 3. Flash TWRP
 echo 4. Format Data
-echo 5. Exit
+echo 5. Exit (also reboot your device from fastboot)
 echo.
 
 set /p option=Enter your choice (1/2/3/4):
@@ -101,9 +101,10 @@ if "%option%" equ "1" (
     set flashTWRP=false
     call :select_format
 ) else if "%option%" equ "5" (
+    echo fastboot reboot
     echo Exiting script.
-    timeout /nobreak /t 3 >nul 2>&1
-    exit /b 1
+    pause
+    exit
 ) else (
     echo Invalid option. Please enter a valid option.
     goto menu
@@ -204,8 +205,6 @@ if "%flashBoot%"=="true" (
         echo Flashing Boot Image...
         fastboot flash boot %bootImage%
         echo Boot Image flashed successfully.
-        fastboot reboot
-        echo Restarting
         pause
         cd ..
         call :menu
@@ -236,7 +235,7 @@ if "%vendorBootChoice%" equ "1" (
 	set availablity=%twrp_vendor_boot%
 ) else (
     echo Invalid vendor boot image selection. Please select a valid option.
-    timeout /nobreak /t 6 >nul 2>&1
+    pause
     goto flash_twrp
 )
 
@@ -247,9 +246,7 @@ if "%flashTWRP%"=="true" (
         echo Flashing vendor_boot...
         fastboot flash vendor_boot_a %vendorBootImage%
         echo vendor_boot flashed successfully.
-        fastboot reboot
-        echo Restarting
-        timeout /nobreak /t 2 >nul 2>&1
+        pause
         cd ..
         call :menu
     ) else (
@@ -323,7 +320,7 @@ if not "!missingImages!"=="" (
     set /p continue=
     if /i "!continue!" neq "yes" (
         echo Returning to main menu.
-        timeout /nobreak /t 3 >nul 2>&1
+        pause
         endlocal
         call :menu
     )
@@ -450,8 +447,6 @@ echo Activated Slot %slot% successfully.
 echo press enter to reboot (!!! Verify if all images flashed succesfully)
 pause
 pause
-fastboot reboot
-echo Restarting
 echo Returning to Main menu
 pause
 cd ..
