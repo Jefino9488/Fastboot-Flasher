@@ -101,7 +101,7 @@ if "%option%" equ "1" (
     set flashTWRP=false
     call :select_format
 ) else if "%option%" equ "5" (
-    echo fastboot reboot
+    fastboot reboot
     echo Exiting script.
     pause
     exit
@@ -299,7 +299,7 @@ if "%flashRom%"=="true" (
 )
 
 
-set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img preloader_raw.img scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vbmeta_system.img vbmeta_vendor.img super.img"
+set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img preloader_xaga.bin scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vbmeta_system.img vbmeta_vendor.img super.img"
 
 
 
@@ -398,9 +398,10 @@ echo Flashing pi_img...
 fastboot flash pi_img_a pi_img.img
 echo pi_img flashed successfully.
 
-echo Flashing preloader_raw...
-fastboot flash preloader_raw_a preloader_raw.img
-echo preloader_raw flashed successfully.
+echo Flashing preloader_bin..
+fastboot flash preloader1 preloader_xaga.bin
+fastboot flash preloader2 preloader_xaga.bin
+echo preloader bin flashed successfully.
 
 echo Flashing scp...
 fastboot flash scp_a scp.img
