@@ -33,7 +33,7 @@ pause
 setlocal
 set "SCRIPT_PATH=%~dp0"
 set "PATH=%b2eincfilepath%"
-if not exist %SCRIPT_PATH%\twrp mkdir %SCRIPT_PATH%\twrp
+if not exist %SCRIPT_PATH%\vendor_boot mkdir %SCRIPT_PATH%\vendor_boot
 if not exist %SCRIPT_PATH%\boot mkdir %SCRIPT_PATH%\boot
 if not exist %SCRIPT_PATH%\images mkdir %SCRIPT_PATH%\images
 
@@ -53,12 +53,12 @@ if exist boot\boot.img (
     set boot=missing
 )
 
-if exist twrp\vendor_boot.img (
+if exist vendor_boot\vendor_boot.img (
 	set vendor_boot=available
 ) else (
     set vendor_boot=missing
 )
-if exist twrp\twrp_vendor_boot.img (
+if exist vendor_boot\twrp_vendor_boot.img (
     set twrp_vendor_boot=available
 ) else (
     set twrp_vendor_boot=missing
@@ -140,20 +140,10 @@ if "%format%"=="true" (
     goto menu
 )
 
-:set_default_slot
-set defaultSlot=a
-echo.
-:select_slot
-echo Slot:
-echo Select the active slot (a or b, press Enter for default '%defaultSlot%'):
-set /p slot=
+set slot=a
 
-if /i "%slot%" neq "a" if /i "%slot%" neq "b" (
-    echo Invalid slot selection. Using default slot '%defaultSlot%'.
-    set slot=%defaultSlot%
-)
+echo Fixed slot %slot%.
 
-echo You selected slot %slot%.
 echo.
 :flash_boot
 if exist boot\magisk_boot.img (
@@ -216,6 +206,11 @@ if "%flashBoot%"=="true" (
     )
 )
 
+if "%flashRom%"=="true" (
+    set vendorBootImage=vendor_boot.img
+    goto :checker
+)
+
 :flash_twrp
 echo.
 echo Vendor Boot:
@@ -257,6 +252,7 @@ if "%flashTWRP%"=="true" (
     )
 )
 
+:checker
 echo.
 echo Start the flashing process? (Y/N)
 set /p confirm=
@@ -265,12 +261,8 @@ if /i "%confirm%" neq "Y" (
     echo Returning to main menu.
     pause
     call :menu
-) else (
-    call :checker
 )
 
-
-:checker
 echo Verifying configurations...
 echo Please wait...
 timeout /nobreak /t 5 >nul 2>&1
@@ -280,7 +272,7 @@ if exist boot\%bootImage% (
     set bootimg=missing
 )
 
-if exist twrp\%vendorBootImage% (
+if exist vendor_boot\%vendorBootImage% (
     set twrpimg=available
 ) else (
     set twrpimg=missing
@@ -292,14 +284,14 @@ if "%flashRom%"=="true" (
         pause
         goto :menu
     ) else if /i "%twrpimg%"=="missing" (
-        echo TWRP image is missing. Aborting...
+        echo vendor_boot image is missing. Aborting...
         pause
         goto :menu
     )
 )
 
 
-set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img preloader_xaga.bin scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vbmeta_system.img vbmeta_vendor.img super.img"
+set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img preloader_raw.img scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vbmeta_system.img vbmeta_vendor.img super.img"
 
 
 
@@ -399,8 +391,8 @@ fastboot flash pi_img_a pi_img.img
 echo pi_img flashed successfully.
 
 echo Flashing preloader_bin..
-fastboot flash preloader1 preloader_xaga.bin
-fastboot flash preloader2 preloader_xaga.bin
+fastboot flash preloader1 preloader_raw.img
+fastboot flash preloader2 preloader_raw.img
 echo preloader bin flashed successfully.
 
 echo Flashing scp...

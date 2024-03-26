@@ -20,7 +20,7 @@ Welcome to the Universal Fastboot All-In-One Flasher! This tool is designed to s
     │   └── boot.img
     ├── images
     │   └── images # refer placeholder images
-    └── twrp
+    └── vendor_boot
         ├── recovery.img
         └── vendor_boot.img
     ```
