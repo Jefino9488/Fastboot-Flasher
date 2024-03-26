@@ -457,7 +457,7 @@ goto :eof
 
 :twrp_flasher
 cd ..
-cd twrp
+cd vendor_boot
 echo Flashing vendor_boot...
 fastboot flash vendor_boot_a %vendorBootImage%
 echo vendor_boot flashed successfully.
