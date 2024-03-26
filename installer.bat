@@ -236,7 +236,7 @@ if "%vendorBootChoice%" equ "1" (
 
 if "%flashTWRP%"=="true" (
     if "%availablity%"=="available" (
-        cd twrp
+        cd vendor_boot
         echo.
         echo Flashing vendor_boot...
         fastboot flash vendor_boot_a %vendorBootImage%
