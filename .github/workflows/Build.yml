@@ -24,6 +24,11 @@ jobs:
         VERSION="v2-${DATE}-${SHORT_SHA}"
         echo "::set-output name=version::$VERSION"
 
+    - name: Set Git user info
+      run: |
+        git config user.email "jefinojacob9488@gmail.com"
+        git config user.name "Jefino9488"
+
     - name: Download latest Linux platform tools
       run: |
         wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O platform-tools-linux.zip
@@ -66,4 +71,4 @@ jobs:
         allowUpdates: true
         makeLatest: true
         bodyFile: CHANGELOG.md
-        token: ${{ secrets.PAT_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
