@@ -1,0 +1,49 @@
+name: Build Fastboot Flasher
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download latest Linux platform tools
+      run: |
+        wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O platform-tools-linux.zip
+        mkdir -p tools/linux
+        unzip platform-tools-linux.zip -d tools/linux
+
+    - name: Download latest Windows platform tools
+      run: |
+        wget https://dl.google.com/android/repository/platform-tools-latest-windows.zip -O platform-tools-windows.zip
+        mkdir -p tools/windows
+        unzip platform-tools-windows.zip -d tools/windows
+
+    - name: Create images directory
+      run: mkdir -p images
+
+    - name: Prepare files for zip
+      run: |
+        mkdir -p fastbootflasher-v2
+        cp -r tools fastbootflasher-v2/tools
+        cp -r images fastbootflasher-v2/images
+        cp installer.bat fastbootflasher-v2/
+
+    - name: Create zip file
+      run: |
+        zip -r fastbootflasher-v2.zip fastbootflasher-v2
+
+    - name: Upload zip file
+      uses: actions/upload-artifact@v4
+      with:
+        name: fastbootflasher-v2
+        path: fastbootflasher-v2.zip
