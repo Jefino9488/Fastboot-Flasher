@@ -23,7 +23,7 @@ jobs:
       id: version
       run: |
         DATE=$(date +'%Y%m%d')
-        VERSION="v2-${DATE}"
+        VERSION="v3-${DATE}"
         echo "::set-output name=version::$VERSION"
 
     - name: Set Git user info
@@ -63,7 +63,6 @@ jobs:
         echo "## Release Notes" > release_notes.txt
         echo "- Built Fastboot Flasher from commit ${{ github.sha }}" >> release_notes.txt
         echo "- Version: ${{ steps.version.outputs.version }}" >> release_notes.txt
-        echo "- Add any other relevant changes or notes here" >> release_notes.txt
 
     - name: Create release
       id: create_release
