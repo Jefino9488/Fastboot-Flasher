@@ -23,8 +23,7 @@ jobs:
       id: version
       run: |
         DATE=$(date +'%Y%m%d')
-        SHORT_SHA=$(git rev-parse --short HEAD)
-        VERSION="v2-${DATE}-${SHORT_SHA}"
+        VERSION="v2-${DATE}"
         echo "::set-output name=version::$VERSION"
 
     - name: Set Git user info
