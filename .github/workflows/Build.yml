@@ -63,5 +63,7 @@ jobs:
         artifacts: fastbootflasher-${{ steps.version.outputs.version }}.zip
         tag: "${{ steps.version.outputs.version }}"
         name: "Fastboot Flasher ${{ steps.version.outputs.version }}"
-        token: ${{ secrets.GITHUB_TOKEN }}
+        allowUpdates: true
+        makeLatest: true
         bodyFile: CHANGELOG.md
+        token: ${{ secrets.GITHUB_TOKEN }}
