@@ -55,12 +55,6 @@ jobs:
       run: |
         zip -r fastbootflasher-${{ steps.version.outputs.version }}.zip fastbootflasher-v2
 
-    - name: Upload zip file as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: fastbootflasher-v2
-        path: fastbootflasher-${{ steps.version.outputs.version }}.zip
-
     - name: Create release
       id: create_release
       uses: ncipollo/release-action@v1
