@@ -57,13 +57,11 @@ jobs:
         path: fastbootflasher-${{ steps.version.outputs.version }}.zip
 
     - name: Create release
-      uses: actions/create-release@v1
       id: create_release
+      uses: ncipollo/release-action@v1
       with:
-        draft: false
-        prerelease: false
-        release_name: Fastboot Flasher ${{ steps.version.outputs.version }}
-        tag_name: ${{ steps.version.outputs.version }}
-        body_path: CHANGELOG.md
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        artifacts: fastbootflasher-${{ steps.version.outputs.version }}.zip
+        tag: "${{ steps.version.outputs.version }}"
+        name: "Fastboot Flasher ${{ steps.version.outputs.version }}"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        bodyFile: CHANGELOG.md
