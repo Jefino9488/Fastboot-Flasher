@@ -22,7 +22,7 @@ if "%device%" neq "xaga" if "%device%" neq "xagapro" if "%device%" neq "xagain" 
 )
 setlocal
 set "SCRIPT_PATH=%~dp0"
-set "TOOLS=%SCRIPT_PATH%tools"
+set "TOOLS=%SCRIPT_PATH%tools\windows\platform-tools"
 set PATH=%PATH%;%TOOLS%
 if not exist %SCRIPT_PATH%\images mkdir %SCRIPT_PATH%\images
 set "imagesPath=%SCRIPT_PATH%\images"
