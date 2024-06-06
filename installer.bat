@@ -6,6 +6,12 @@ echo ========================================================
 echo       Connect your device in fastboot mode.
 echo --------------------------------------------------------
 echo Waiting for device...
+setlocal
+set "SCRIPT_PATH=%~dp0"
+set "TOOLS=%SCRIPT_PATH%tools\windows\platform-tools"
+set PATH=%PATH%;%TOOLS%
+if not exist %SCRIPT_PATH%\images mkdir %SCRIPT_PATH%\images
+set "imagesPath=%SCRIPT_PATH%\images"
 :wait_for_device
 set device=unknown
 for /f "tokens=2" %%D in ('fastboot getvar product 2^>^&1 ^| findstr /l /b /c:"product:"') do set device=%%D
@@ -20,12 +26,6 @@ if "%device%" neq "xaga" if "%device%" neq "xagapro" if "%device%" neq "xagain" 
     pause
     exit /B 1
 )
-setlocal
-set "SCRIPT_PATH=%~dp0"
-set "TOOLS=%SCRIPT_PATH%tools\windows\platform-tools"
-set PATH=%PATH%;%TOOLS%
-if not exist %SCRIPT_PATH%\images mkdir %SCRIPT_PATH%\images
-set "imagesPath=%SCRIPT_PATH%\images"
 
 :main_menu
 cls

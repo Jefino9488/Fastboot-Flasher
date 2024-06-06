@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'installer.bat'
+      - 'installer.sh'
 
 jobs:
   build:
@@ -54,6 +55,7 @@ jobs:
         cp -r tools fastbootflasher-v2/tools
         cp -r images fastbootflasher-v2/images
         cp installer.bat fastbootflasher-v2/
+        cp installer.sh fastbootflasher-v2/
 
     - name: Create zip file
       run: |
