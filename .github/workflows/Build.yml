@@ -66,4 +66,4 @@ jobs:
         allowUpdates: true
         makeLatest: true
         bodyFile: CHANGELOG.md
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT_TOKEN }}
