@@ -49,14 +49,16 @@ jobs:
 
     - name: Prepare files for zip
       run: |
-        mkdir -p fastbootflasher
-        cp -r tools fastbootflasher/tools
+        mkdir -p fastbootflasher/tools
+        cp -r tools/linux fastbootflasher/tools/
+        cp -r tools/windows fastbootflasher/tools/
         cp installer.bat fastbootflasher/
         cp installer.sh fastbootflasher/
 
     - name: Create zip file
       run: |
-        zip -r fastbootflasher-${{ env.version }}.zip -j fastbootflasher/*
+        cd fastbootflasher
+        zip -r ../fastbootflasher-${{ env.version }}.zip *
 
     - name: Create Release Notes
       run: |
