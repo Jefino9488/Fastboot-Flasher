@@ -4,8 +4,6 @@
 
 Welcome to the Fastboot Flasher! This tool is designed to simplify and secure the process of flashing ROMs, boot images, and TWRP on Android devices. Whether you're a beginner or an experienced user, this tool streamlines the flashing process with a user-friendly interface.
 
----
-
 ## Features
 
 - **Working Directory Setup:**
@@ -70,8 +68,6 @@ Welcome to the Fastboot Flasher! This tool is designed to simplify and secure th
       - If the user types `yes`, it will continue the flashing process with the available images.
       - If the user types anything other than `yes`, it will return to the main menu.
 
----
-
 ## Usage
 
 ### Prerequisites
@@ -90,21 +86,15 @@ Welcome to the Fastboot Flasher! This tool is designed to simplify and secure th
 
 2. Follow the on-screen instructions for the selected option.
 
----
-
 ## Important Notes
 
 - Ensure boot images and ROM images are placed in the `images` folder before starting the flashing process.
 - Refer to the [Usage](#usage) section for a step-by-step guide on flashing.
 
----
-
 ## Support and Community
 
 - Join our [XAGA Community](https://t.me/XAGA_Community) for updates and support.
 - Report issues to [@Jefino9488](https://t.me/Jefino9488).
-
----
 
 ## Disclaimer
 
@@ -114,4 +104,3 @@ This is self-developed software created to make the flashing process easy and se
 
 Thank you for choosing the Fastboot Flasher. Happy flashing!
 
----
