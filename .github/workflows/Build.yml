@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -15,6 +12,17 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Set up Git
+      run: git config --global --add safe.directory /github/workspace
+
+    - name: Get current date and commit hash
+      id: version
+      run: |
+        DATE=$(date +'%Y%m%d')
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        VERSION="v2-${DATE}-${SHORT_SHA}"
+        echo "::set-output name=version::$VERSION"
 
     - name: Download latest Linux platform tools
       run: |
@@ -40,10 +48,22 @@ jobs:
 
     - name: Create zip file
       run: |
-        zip -r fastbootflasher-v2.zip fastbootflasher-v2
+        zip -r fastbootflasher-${{ steps.version.outputs.version }}.zip fastbootflasher-v2
 
-    - name: Upload zip file
+    - name: Upload zip file as artifact
       uses: actions/upload-artifact@v4
       with:
         name: fastbootflasher-v2
-        path: fastbootflasher-v2.zip
+        path: fastbootflasher-${{ steps.version.outputs.version }}.zip
+
+    - name: Create release
+      uses: actions/create-release@v1
+      id: create_release
+      with:
+        draft: false
+        prerelease: false
+        release_name: Fastboot Flasher ${{ steps.version.outputs.version }}
+        tag_name: ${{ steps.version.outputs.version }}
+        body_path: CHANGELOG.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
