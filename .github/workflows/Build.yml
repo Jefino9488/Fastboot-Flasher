@@ -58,6 +58,14 @@ jobs:
       run: |
         zip -r fastbootflasher-${{ steps.version.outputs.version }}.zip fastbootflasher-v2
 
+    - name: Create Release Notes
+      run: |
+        touch release_notes.txt
+        echo "## Release Notes" > release_notes.txt
+        echo "- Built Fastboot Flasher from commit ${{ github.sha }}" >> release_notes.txt
+        echo "- Version: ${{ steps.version.outputs.version }}" >> release_notes.txt
+        echo "- Add any other relevant changes or notes here" >> release_notes.txt
+
     - name: Create release
       id: create_release
       uses: ncipollo/release-action@v1
@@ -67,5 +75,5 @@ jobs:
         name: "Fastboot Flasher ${{ steps.version.outputs.version }}"
         allowUpdates: true
         makeLatest: true
-        bodyFile: CHANGELOG.md
+        bodyFile: release_notes.txt
         token: ${{ secrets.GITHUB_TOKEN }}

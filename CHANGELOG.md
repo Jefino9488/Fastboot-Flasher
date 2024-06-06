@@ -1,11 +1,10 @@
 # Changelog
 
----
 ## v2
 
 - Improved device detection with a waiting mechanism.
 - Added compatibility checks for device models `xaga`, `xagapro`, and `xagain`.
-- Enhanced boot image selection (Magisk and default).
+- Enhanced boot image selection (Magisk and Stock).
 - Included critical and additional image verification before flashing.
 - Streamlined the flashing process with user prompts for formatting data.
 - Added functionality for additional options, including flashing boot images, vendor boot images, and formatting data.
