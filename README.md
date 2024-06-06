@@ -1,8 +1,8 @@
-# Universal Fastboot Flasher
+# Fastboot Flasher
 
 ## Overview
 
-Welcome to the Universal Fastboot Flasher! This tool is designed to simplify and secure the process of flashing ROMs, boot images, and TWRP on Android devices. Whether you're a beginner or an experienced user, this tool streamlines the flashing process with a user-friendly interface.
+Welcome to the Fastboot Flasher! This tool is designed to simplify and secure the process of flashing ROMs, boot images, and TWRP on Android devices. Whether you're a beginner or an experienced user, this tool streamlines the flashing process with a user-friendly interface.
 
 ---
 
@@ -112,6 +112,6 @@ This is self-developed software created to make the flashing process easy and se
 
 ### Thank You
 
-Thank you for choosing the Universal Fastboot Flasher. Happy flashing!
+Thank you for choosing the Fastboot Flasher. Happy flashing!
 
 ---
