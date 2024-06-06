@@ -7,6 +7,7 @@ on:
     paths:
       - 'installer.bat'
       - 'installer.sh'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,7 +28,7 @@ jobs:
       run: |
         DATE=$(date +'%Y%m%d')
         VERSION="v3-${DATE}"
-        echo "::set-output name=version::$VERSION"
+        echo "version=$VERSION" >> $GITHUB_ENV
 
     - name: Set Git user info
       run: |
@@ -46,35 +47,30 @@ jobs:
         mkdir -p tools/windows
         unzip platform-tools-windows.zip -d tools/windows
 
-    - name: Create images directory
-      run: mkdir -p images
-
     - name: Prepare files for zip
       run: |
-        mkdir -p fastbootflasher-v2
-        cp -r tools fastbootflasher-v2/tools
-        cp -r images fastbootflasher-v2/images
-        cp installer.bat fastbootflasher-v2/
-        cp installer.sh fastbootflasher-v2/
+        mkdir -p fastbootflasher
+        cp -r tools fastbootflasher/tools
+        cp installer.bat fastbootflasher/
+        cp installer.sh fastbootflasher/
 
     - name: Create zip file
       run: |
-        zip -r fastbootflasher-${{ steps.version.outputs.version }}.zip fastbootflasher-v2
+        zip -r fastbootflasher-${{ env.version }}.zip -j fastbootflasher/*
 
     - name: Create Release Notes
       run: |
-        touch release_notes.txt
         echo "## Release Notes" > release_notes.txt
         echo "- Built Fastboot Flasher from commit ${{ github.sha }}" >> release_notes.txt
-        echo "- Version: ${{ steps.version.outputs.version }}" >> release_notes.txt
+        echo "- Version: ${{ env.version }}" >> release_notes.txt
 
     - name: Create release
       id: create_release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: fastbootflasher-${{ steps.version.outputs.version }}.zip
-        tag: "${{ steps.version.outputs.version }}"
-        name: "Fastboot Flasher ${{ steps.version.outputs.version }}"
+        artifacts: fastbootflasher-${{ env.version }}.zip
+        tag: "${{ env.version }}"
+        name: "Fastboot Flasher ${{ env.version }}"
         allowUpdates: true
         makeLatest: true
         bodyFile: release_notes.txt
