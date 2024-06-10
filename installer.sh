@@ -8,8 +8,9 @@ echo "       Connect your device in fastboot mode."
 echo "--------------------------------------------------------"
 echo "Waiting for device..."
 SCRIPT_PATH=$(dirname "$(readlink -f "$0")")
-TOOLS="$SCRIPT_PATH/tools/linux/platform-tools"
-export PATH=$PATH:$TOOLS
+fastboot=tools/linux/platform-tools/fastboot
+[ ! -f $fastboot ] && echo "$fastboot not found." && exit 1
+[ ! -x $fastboot ] && ! chmod +x $fastboot && echo "$fastboot cannot be executed." && exit 1
 
 if [ ! -d "$SCRIPT_PATH/images" ]; then
     mkdir "$SCRIPT_PATH/images"
@@ -17,7 +18,7 @@ fi
 imagesPath="$SCRIPT_PATH/images"
 
 wait_for_device() {
-    device=$(fastboot getvar product 2>&1 | grep -oP "(?<=product: )[^\r\n]+")
+    device=$($fastboot getvar product 2>&1 | grep -F "product:" | tr -s " " | cut -d " " -f 2)
 
     if [ -z "$device" ]; then
         echo "No device detected. Waiting for device..."
@@ -28,7 +29,7 @@ wait_for_device() {
     if [ "$device" != "xaga" ] && [ "$device" != "xagapro" ] && [ "$device" != "xagain" ]; then
         echo "Compatible devices: xaga, xagapro, xagain"
         echo "Your device: $device"
-        read -rp "Press any key to exit..." -n1 -s
+        read -p "Press any key to exit..." -n1 -s
         exit 1
     fi
 }
@@ -47,7 +48,7 @@ main_menu() {
     echo "2. Additional Options"
     echo "3. Exit / Reboot"
     echo "========================================================"
-    read -rp "Enter your choice (1/2/3): " option
+    read -p "Enter your choice (1/2/3): " option
     echo
 
     case $option in
@@ -60,7 +61,7 @@ main_menu() {
         3)
             fastboot reboot
             echo "Exiting script."
-            read -rp "Press any key to exit..." -n1 -s
+            read -p "Press any key to exit..." -n1 -s
             exit
             ;;
         *)
@@ -72,7 +73,7 @@ main_menu() {
 
 flash_rom() {
     echo "Do you want to format data? (Y/N)"
-    read -rp "" formatData
+    read -p "" formatData
 
     if [[ "$formatData" =~ ^[Yy]$ ]]; then
         echo "Formatting data..."
@@ -88,7 +89,7 @@ flash_rom() {
     echo "2. Default [boot.img]"
     echo
     echo "Select boot image type:"
-    read -rp "" bootChoice
+    read -p "" bootChoice
     echo
 
     case $bootChoice in
@@ -111,12 +112,12 @@ flash_rom() {
     echo "Verifying critical images..."
     if [ ! -f "boot.img" ]; then
         echo "boot.img is missing. Aborting."
-        read -rp "Press any key to return to main menu..." -n1 -s
+        read -p "Press any key to return to main menu..." -n1 -s
         main_menu
     fi
     if [ ! -f "vendor_boot.img" ]; then
         echo "vendor_boot.img is missing. Aborting."
-        read -rp "Press any key to return to main menu..." -n1 -s
+        read -p "Press any key to return to main menu..." -n1 -s
         main_menu
     fi
 
@@ -135,10 +136,10 @@ flash_rom() {
         echo
         echo "Some required images are missing. Do you want to continue anyway?"
         echo 'Type "yes" to continue.'
-        read -rp "" continue
+        read -p "" continue
         if [ "$continue" != "yes" ]; then
             echo "Returning to main menu."
-            read -rp "Press any key to return to main menu..." -n1 -s
+            read -p "Press any key to return to main menu..." -n1 -s
             main_menu
         fi
     fi
@@ -147,27 +148,27 @@ flash_rom() {
 
     for img in "${requiredImages[@]}"; do
         echo "Flashing $img..."
-        fastboot flash "${img%.*}_a" "$img"
+        $fastboot flash "${img%.*}_a" "$img"
         echo "$img flashed successfully."
     done
 
     if [ -f "logo.img" ]; then
         echo "Flashing logo..."
-        fastboot flash logo_a logo.img
+        $fastboot flash logo_a logo.img
         echo "Logo flashed successfully."
     fi
 
     echo "Flashing boot image..."
-    fastboot flash boot_a "$bootImage"
+    $fastboot flash boot_a "$bootImage"
     echo "$bootImage flashed successfully."
 
     echo "Setting active slot..."
-    fastboot set_active a
+    $fastboot set_active a
     echo "Slot a activated successfully."
 
     echo "Press Enter to reboot and return to main menu."
-    read -rp "" -n1 -s
-    fastboot reboot
+    read -p "" -n1 -s
+    $fastboot reboot
     main_menu
 }
 
@@ -181,7 +182,7 @@ additional_options() {
     echo "3. Format Data"
     echo "4. Return to Main Menu"
     echo "========================================================"
-    read -rp "Enter your choice (1/2/3/4): " option
+    read -p "Enter your choice (1/2/3/4): " option
     echo
 
     case $option in
@@ -210,7 +211,7 @@ flash_boot() {
     echo "2. Default [boot.img]"
     echo
     echo "Select boot image type:"
-    read -rp "" bootChoice
+    read -p "" bootChoice
     echo
 
     case $bootChoice in
@@ -231,13 +232,13 @@ flash_boot() {
 
     if [ -f "$imagesPath/$bootImage" ]; then
         echo "Flashing $bootImage..."
-        fastboot flash boot_a "$bootImage"
+        $fastboot flash boot_a "$bootImage"
         echo "$bootImage flashed successfully."
     else
         echo "$bootImage not found."
     fi
 
-    read -rp "Press any key to return to additional options..." -n1 -s
+    read -p "Press any key to return to additional options..." -n1 -s
     additional_options
 }
 
@@ -247,7 +248,7 @@ flash_vendor_boot() {
     echo "2. TWRP Vendor Boot [twrp_vendor_boot.img]"
     echo
     echo "Select vendor boot image type:"
-    read -rp "" vendorBootChoice
+    read -p "" vendorBootChoice
     echo
 
     case $vendorBootChoice in
@@ -268,23 +269,24 @@ flash_vendor_boot() {
 
     if [ -f "$imagesPath/$vendorBootImage" ]; then
         echo "Flashing $vendorBootImage..."
-        fastboot flash vendor_boot_a "$vendorBootImage"
+        $fastboot flash vendor_boot_a "$vendorBootImage"
         echo "$vendorBootImage flashed successfully."
     else
         echo "$vendorBootImage not found."
     fi
 
-    read -rp "Press any key to return to additional options..." -n1 -s
+    read -p "Press any key to return to additional options..." -n1 -s
     additional_options
 }
 
 format_data() {
     echo "Formatting data..."
-    fastboot erase metadata
-    fastboot erase userdata
+    $fastboot erase metadata
+    $fastboot erase userdata
     echo "Data formatted successfully."
-    read -rp "Press any key to return to additional options..." -n1 -s
+    read -p "Press any key to return to additional options..." -n1 -s
     additional_options
 }
 
 main_menu
+# End of script
