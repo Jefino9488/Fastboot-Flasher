@@ -12,6 +12,7 @@ set "TOOLS=%SCRIPT_PATH%tools\windows\platform-tools"
 set PATH=%PATH%;%TOOLS%
 if not exist %SCRIPT_PATH%\images mkdir %SCRIPT_PATH%\images
 set "imagesPath=%SCRIPT_PATH%\images"
+
 :wait_for_device
 set device=unknown
 for /f "tokens=2" %%D in ('fastboot getvar product 2^>^&1 ^| findstr /l /b /c:"product:"') do set device=%%D
@@ -162,9 +163,10 @@ echo ========================================================
 echo 1. Flash Boot Image
 echo 2. Flash Vendor Boot
 echo 3. Format Data
-echo 4. Return to Main Menu
+echo 4. Custom Command
+echo 5. Return to Main Menu
 echo ========================================================
-set /p option=Enter your choice (1/2/3/4):
+set /p option=Enter your choice (1/2/3/4/5):
 echo.
 
 if "%option%" equ "1" (
@@ -174,6 +176,8 @@ if "%option%" equ "1" (
 ) else if "%option%" equ "3" (
     call :format_data
 ) else if "%option%" equ "4" (
+    call :custom_command
+) else if "%option%" equ "5" (
     call :main_menu
 ) else (
     echo Invalid option. Please enter a valid option.
@@ -249,5 +253,15 @@ echo Formatting data...
 fastboot erase metadata
 fastboot erase userdata
 echo Data formatted successfully.
+pause
+call :additional_options
+
+:custom_command
+echo Enter the command you want to execute:
+set /p customCommand=
+echo.
+
+echo Executing command: %customCommand%
+%customCommand%
 pause
 call :additional_options
