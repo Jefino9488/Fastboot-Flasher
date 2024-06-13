@@ -185,6 +185,7 @@ if "%option%" equ "1" (
 )
 
 :flash_boot
+cd %imagesPath%
 echo Boot Type:
 echo 1. Magisk [magisk_boot.img]
 echo 2. Default [boot.img]
@@ -217,6 +218,7 @@ pause
 call :additional_options
 
 :flash_vendor_boot
+cd %imagesPath%
 echo Vendor Boot Type:
 echo 1. Stock Vendor Boot [vendor_boot.img]
 echo 2. TWRP Vendor Boot [twrp_vendor_boot.img]
@@ -257,6 +259,7 @@ pause
 call :additional_options
 
 :custom_command
+cd %imagesPath%
 echo Enter the command you want to execute:
 set /p customCommand=
 echo.
