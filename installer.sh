@@ -103,17 +103,17 @@ flash_rom() {
 echo "Verifying additional images..."
 
 # List of required images
-requiredImages=(
-    "apusys.img" "audio_dsp.img" "ccu.img" "dpm.img" "dtbo.img" "gpueb.img" 
-    "gz.img" "lk.img" "mcf_ota.img" "mcupm.img" "md1img.img" "mvpu_algo.img" 
-    "pi_img.img" "preloader_xaga.bin" "scp.img" "spmfw.img" "sspm.img" "tee.img" 
-    "vcp.img" "vbmeta.img" "vendor_boot.img" "vbmeta_system.img" "vbmeta_vendor.img"
-)
+    requiredImages=(
+        "apusys.img" "audio_dsp.img" "ccu.img" "dpm.img" "dtbo.img" "gpueb.img" 
+        "gz.img" "lk.img" "mcf_ota.img" "mcupm.img" "md1img.img" "mvpu_algo.img" 
+        "pi_img.img" "scp.img" "spmfw.img" "sspm.img" "tee.img" 
+        "vcp.img" "vbmeta.img" "vendor_boot.img" "vbmeta_system.img" "vbmeta_vendor.img"
+    )
 
-# Additional required files
-additionalRequiredFiles=(
-    "super.img"
-)
+ # Additional required files
+    additionalRequiredFiles=(
+        "super.img" "preloader_xaga.bin"
+    )
 
 # Check for missing images
 missingImages=()
@@ -152,6 +152,15 @@ if [ -f "super.img" ]; then
     $fastboot flash super super.img
     echo "super.img flashed successfully."
 fi
+
+# Flash preloader image
+    if [ -f "preloader_xaga.bin" ]; then
+        echo "Flashing preloader image..."
+        $fastboot flash preloader1 preloader_xaga.bin
+        $fastboot flash preloader2 preloader_xaga.bin
+        echo "preloader_xaga.bin flashed successfully."
+    fi
+
 
 
 if [ -f "logo.img" ]; then
