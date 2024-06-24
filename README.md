@@ -12,7 +12,10 @@ Welcome to the Fastboot Flasher! This tool is designed to simplify and secure th
     Any Folder
     ├── installer.bat
     ├── tools
-    │   └── platform-tools (extracted platform tools)
+    │   └── linux
+    │   │        └──platform-tools (extracted platform tools)
+    │   └── windows
+    │            └── platform-tools (extracted platform tools)
     └── images
         └── (place required images here)
     ```
