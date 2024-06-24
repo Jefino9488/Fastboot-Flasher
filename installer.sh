@@ -97,46 +97,76 @@ flash_rom() {
         main_menu
     fi
 
-    echo "Verifying additional images..."
-    requiredImages=("apusys.img" "audio_dsp.img" "ccu.img" "dpm.img" "dtbo.img" "gpueb.img" "gz.img" "lk.img" "mcf_ota.img" "mcupm.img" "md1img.img" "mvpu_algo.img" "pi_img.img" "preloader_xaga.bin" "scp.img" "spmfw.img" "sspm.img" "tee.img" "vcp.img" "vbmeta.img" "vendor_boot.img" "vbmeta_system.img" "vbmeta_vendor.img" "super.img")
-    missingImages=()
+    #!/bin/bash
 
-    for img in "${requiredImages[@]}"; do
-        if [ ! -f "$img" ]; then
-            missingImages+=("$img")
-        fi
-    done
+# Verifying the existence of additional images
+echo "Verifying additional images..."
 
-    if [ ${#missingImages[@]} -ne 0 ]; then
-        echo "Missing images: ${missingImages[*]}"
-        echo
-        echo "Some required images are missing. Do you want to continue anyway?"
-        echo 'Type "yes" to continue.'
-        read -rp "" continue
-        if [ "$continue" != "yes" ]; then
-            echo "Returning to main menu."
-            read -rp "Press any key to return to main menu..." -n1 -s
-            main_menu
-        fi
+# List of required images
+requiredImages=(
+    "apusys.img" "audio_dsp.img" "ccu.img" "dpm.img" "dtbo.img" "gpueb.img" 
+    "gz.img" "lk.img" "mcf_ota.img" "mcupm.img" "md1img.img" "mvpu_algo.img" 
+    "pi_img.img" "preloader_xaga.bin" "scp.img" "spmfw.img" "sspm.img" "tee.img" 
+    "vcp.img" "vbmeta.img" "vendor_boot.img" "vbmeta_system.img" "vbmeta_vendor.img"
+)
+
+# Additional required files
+additionalRequiredFiles=(
+    "super.img"
+)
+
+# Check for missing images
+missingImages=()
+
+for img in "${requiredImages[@]}" "${additionalRequiredFiles[@]}"; do
+    if [ ! -f "$img" ]; then
+        missingImages+=("$img")
     fi
+done
 
-    echo "Flashing all images..."
-
-    for img in "${requiredImages[@]}"; do
-        echo "Flashing $img..."
-        $fastboot flash "${img%.*}_a" "$img"
-        echo "$img flashed successfully."
-    done
-
-    if [ -f "logo.img" ]; then
-        echo "Flashing logo..."
-        $fastboot flash logo_a logo.img
-        echo "Logo flashed successfully."
+# if any images are missing
+if [ ${#missingImages[@]} -ne 0 ]; then
+    echo "Missing images: ${missingImages[*]}"
+    echo
+    echo "Some required images are missing. Do you want to continue anyway?"
+    echo 'Type "yes" to continue.'
+    read -rp "" continue
+    if [ "$continue" != "yes" ]; then
+        echo "Returning to main menu."
+        read -rp "Press any key to return to main menu..." -n1 -s
+        main_menu
     fi
+fi
 
+echo "Flashing all images..."
+
+for img in "${requiredImages[@]}"; do
+    echo "Flashing $img..."
+    $fastboot flash "${img%.*}_a" "$img"
+    echo "$img flashed successfully."
+done
+
+# Flash super image
+if [ -f "super.img" ]; then
+    echo "Flashing super image..."
+    $fastboot flash super super.img
+    echo "super.img flashed successfully."
+fi
+
+
+if [ -f "logo.img" ]; then
+    echo "Flashing logo..."
+    $fastboot flash logo_a logo.img
+    echo "Logo flashed successfully."
+fi
+
+if [ -n "$bootImage" ]; then
     echo "Flashing boot image..."
     $fastboot flash boot_a "$bootImage"
     echo "$bootImage flashed successfully."
+else
+    echo "No boot image specified. Skipping boot image flash."
+fi
 
     echo "Setting active slot..."
     $fastboot set_active a
