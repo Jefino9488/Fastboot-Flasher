@@ -104,11 +104,14 @@ if not exist vendor_boot.img (
 )
 
 echo Verifying additional images...
-set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img preloader_xaga.bin scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vendor_boot.img vbmeta_system.img vbmeta_vendor.img super.img"
+set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vendor_boot.img vbmeta_system.img vbmeta_vendor.img"
+set "additionalRequiredImages=super.img preloader_xaga.bin"
 setlocal enabledelayedexpansion
-set "missingImages="
 
-for %%i in (%requiredImages%) do (
+set "missingImages="
+set "allRequiredImages=%requiredImages% %additionalRequiredImages%"
+
+for %%i in (%allRequiredImages%) do (
     if not exist %%i (
         set "missingImages=!missingImages! %%i "
     )
@@ -145,6 +148,10 @@ if exist logo.img (
 echo Flashing boot image...
 fastboot flash boot_a %bootImage%
 echo %bootImage% flashed successfully.
+
+echo Flashing system image...
+fastboot flash super super.img
+echo super.img flashed successfully.
 
 echo Setting active slot...
 fastboot set_active a
