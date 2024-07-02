@@ -105,7 +105,7 @@ if not exist vendor_boot.img (
 
 echo Verifying additional images...
 set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vendor_boot.img vbmeta_system.img vbmeta_vendor.img"
-set "additionalRequiredImages=super.img preloader_xaga.bin"
+set "additionalRequiredImages=super.img"
 setlocal enabledelayedexpansion
 
 set "missingImages="
@@ -115,6 +115,10 @@ for %%i in (%allRequiredImages%) do (
     if not exist %%i (
         set "missingImages=!missingImages! %%i "
     )
+)
+
+if not exist preloader_xaga.bin if not exist preloader_xaga.img if not exist preloader_raw.img (
+    set "missingImages=!missingImages! preloader_xaga.bin preloader_xaga.img preloader_raw.img"
 )
 
 if not "!missingImages!"=="" (

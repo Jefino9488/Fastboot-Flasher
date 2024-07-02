@@ -110,13 +110,24 @@ flash_rom() {
 
     # Additional required files
     additionalRequiredFiles=(
-        "super.img" "preloader_xaga.bin"
+        "super.img"
     )
 
     # Check for missing images
     missingImages=()
 
-    for img in "${requiredImages[@]}" "${additionalRequiredFiles[@]}"; do
+    for img in "${requiredImages[@]}"; do
+        if [ ! -f "$img" ]; then
+            missingImages+=("$img")
+        fi
+    done
+
+    # Check for the presence of any preloader file
+    if [ ! -f "preloader_xaga.bin" ] && [ ! -f "preloader_xaga.img" ] && [ ! -f "preloader_raw.img" ]; then
+        missingImages+=("preloader_xaga.bin or preloader_xaga.img or preloader_raw.img")
+    fi
+
+    for img in "${additionalRequiredFiles[@]}"; do
         if [ ! -f "$img" ]; then
             missingImages+=("$img")
         fi
@@ -154,18 +165,18 @@ flash_rom() {
     # Flash preloader image
     if [ -f "$imagesPath/preloader_xaga.bin" ]; then
         echo "Flashing preloader image..."
-        $fastboot flash preloader1 $imagesPath/preloader_xaga.bin
-        $fastboot flash preloader2 $imagesPath/preloader_xaga.bin
+        $fastboot flash preloader1 preloader_xaga.bin
+        $fastboot flash preloader2 preloader_xaga.bin
         echo "preloader_xaga.bin flashed successfully."
     elif [ -f "$imagesPath/preloader_xaga.img" ]; then
         echo "Flashing preloader image..."
-        $fastboot flash preloader1 $imagesPath/preloader_xaga.img
-        $fastboot flash preloader2 $imagesPath/preloader_xaga.img
+        $fastboot flash preloader1 preloader_xaga.img
+        $fastboot flash preloader2 preloader_xaga.img
         echo "preloader_xaga.img flashed successfully."
     elif [ -f "$imagesPath/preloader_raw.img" ]; then
         echo "Flashing preloader image..."
-        $fastboot flash preloader1 $imagesPath/preloader_raw.img
-        $fastboot flash preloader2 $imagesPath/preloader_raw.img
+        $fastboot flash preloader1 preloader_raw.img
+        $fastboot flash preloader2 preloader_raw.img
         echo "preloader_raw.img flashed successfully."
     else
         echo "No preloader file found."
