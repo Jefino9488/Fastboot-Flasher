@@ -152,11 +152,17 @@ if exist %imagesPath%\preloader_xaga.bin (
     echo Preloader flashed successfully.
 )
 
-if exist %imagesPath%\preloader_xaga.bin (
+if exist %imagesPath%\preloader_xaga.img (
     echo Flashing preloader...
-    fastboot flash preloader1 preloader_xaga.bin
-    fastboot flash preloader2 preloader_xaga.bin
+    fastboot flash preloader1 preloader_xaga.img
+    fastboot flash preloader2 preloader_xaga.img
     echo Preloader flashed successfully.
+) else (
+    if exist %imagesPath%\preloader_raw.img (
+        echo Flashing preloader...
+        fastboot flash preloader1 preloader_raw.img
+        fastboot flash preloader2 preloader_raw.img
+        echo Preloader flashed successfully.
 )
 
 echo Flashing boot image...
