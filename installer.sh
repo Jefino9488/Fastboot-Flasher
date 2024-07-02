@@ -97,7 +97,6 @@ flash_rom() {
         main_menu
     fi
 
-    #!/bin/bash
 
 # Verifying the existence of additional images
 echo "Verifying additional images..."
@@ -250,6 +249,7 @@ flash_boot() {
     esac
 
     if [ -f "$imagesPath/$bootImage" ]; then
+        cd "$imagesPath" || exit
         echo "Flashing $bootImage..."
         $fastboot flash boot_a "$bootImage"
         echo "$bootImage flashed successfully."
@@ -287,6 +287,7 @@ flash_vendor_boot() {
     esac
 
     if [ -f "$imagesPath/$vendorBootImage" ]; then
+        cd "$imagesPath" || exit
         echo "Flashing $vendorBootImage..."
         $fastboot flash vendor_boot_a "$vendorBootImage"
         echo "$vendorBootImage flashed successfully."

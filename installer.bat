@@ -145,6 +145,20 @@ if exist logo.img (
     echo Logo flashed successfully.
 )
 
+if exist %imagesPath%\preloader_xaga.bin (
+    echo Flashing preloader...
+    fastboot flash preloader1 preloader_xaga.bin
+    fastboot flash preloader2 preloader_xaga.bin
+    echo Preloader flashed successfully.
+)
+
+if exist %imagesPath%\preloader_xaga.bin (
+    echo Flashing preloader...
+    fastboot flash preloader1 preloader_xaga.bin
+    fastboot flash preloader2 preloader_xaga.bin
+    echo Preloader flashed successfully.
+)
+
 echo Flashing boot image...
 fastboot flash boot_a %bootImage%
 echo %bootImage% flashed successfully.
