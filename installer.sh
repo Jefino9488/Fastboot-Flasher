@@ -97,84 +97,93 @@ flash_rom() {
         main_menu
     fi
 
+    # Verifying the existence of additional images
+    echo "Verifying additional images..."
 
-# Verifying the existence of additional images
-echo "Verifying additional images..."
-
-# List of required images
+    # List of required images
     requiredImages=(
-        "apusys.img" "audio_dsp.img" "ccu.img" "dpm.img" "dtbo.img" "gpueb.img" 
-        "gz.img" "lk.img" "mcf_ota.img" "mcupm.img" "md1img.img" "mvpu_algo.img" 
-        "pi_img.img" "scp.img" "spmfw.img" "sspm.img" "tee.img" 
+        "apusys.img" "audio_dsp.img" "ccu.img" "dpm.img" "dtbo.img" "gpueb.img"
+        "gz.img" "lk.img" "mcf_ota.img" "mcupm.img" "md1img.img" "mvpu_algo.img"
+        "pi_img.img" "scp.img" "spmfw.img" "sspm.img" "tee.img"
         "vcp.img" "vbmeta.img" "vendor_boot.img" "vbmeta_system.img" "vbmeta_vendor.img"
     )
 
- # Additional required files
+    # Additional required files
     additionalRequiredFiles=(
         "super.img" "preloader_xaga.bin"
     )
 
-# Check for missing images
-missingImages=()
+    # Check for missing images
+    missingImages=()
 
-for img in "${requiredImages[@]}" "${additionalRequiredFiles[@]}"; do
-    if [ ! -f "$img" ]; then
-        missingImages+=("$img")
+    for img in "${requiredImages[@]}" "${additionalRequiredFiles[@]}"; do
+        if [ ! -f "$img" ]; then
+            missingImages+=("$img")
+        fi
+    done
+
+    # if any images are missing
+    if [ ${#missingImages[@]} -ne 0 ]; then
+        echo "Missing images: ${missingImages[*]}"
+        echo
+        echo "Some required images are missing. Do you want to continue anyway?"
+        echo 'Type "yes" to continue.'
+        read -rp "" continue
+        if [ "$continue" != "yes" ]; then
+            echo "Returning to main menu."
+            read -rp "Press any key to return to main menu..." -n1 -s
+            main_menu
+        fi
     fi
-done
 
-# if any images are missing
-if [ ${#missingImages[@]} -ne 0 ]; then
-    echo "Missing images: ${missingImages[*]}"
-    echo
-    echo "Some required images are missing. Do you want to continue anyway?"
-    echo 'Type "yes" to continue.'
-    read -rp "" continue
-    if [ "$continue" != "yes" ]; then
-        echo "Returning to main menu."
-        read -rp "Press any key to return to main menu..." -n1 -s
-        main_menu
+    echo "Flashing all images..."
+
+    for img in "${requiredImages[@]}"; do
+        echo "Flashing $img..."
+        $fastboot flash "${img%.*}_a" "$img"
+        echo "$img flashed successfully."
+    done
+
+    # Flash super image
+    if [ -f "super.img" ]; then
+        echo "Flashing super image..."
+        $fastboot flash super super.img
+        echo "super.img flashed successfully."
     fi
-fi
 
-echo "Flashing all images..."
-
-for img in "${requiredImages[@]}"; do
-    echo "Flashing $img..."
-    $fastboot flash "${img%.*}_a" "$img"
-    echo "$img flashed successfully."
-done
-
-# Flash super image
-if [ -f "super.img" ]; then
-    echo "Flashing super image..."
-    $fastboot flash super super.img
-    echo "super.img flashed successfully."
-fi
-
-# Flash preloader image
-    if [ -f "preloader_xaga.bin" ]; then
+    # Flash preloader image
+    if [ -f "$imagesPath/preloader_xaga.bin" ]; then
         echo "Flashing preloader image..."
-        $fastboot flash preloader1 preloader_xaga.bin
-        $fastboot flash preloader2 preloader_xaga.bin
+        $fastboot flash preloader1 $imagesPath/preloader_xaga.bin
+        $fastboot flash preloader2 $imagesPath/preloader_xaga.bin
         echo "preloader_xaga.bin flashed successfully."
+    elif [ -f "$imagesPath/preloader_xaga.img" ]; then
+        echo "Flashing preloader image..."
+        $fastboot flash preloader1 $imagesPath/preloader_xaga.img
+        $fastboot flash preloader2 $imagesPath/preloader_xaga.img
+        echo "preloader_xaga.img flashed successfully."
+    elif [ -f "$imagesPath/preloader_raw.img" ]; then
+        echo "Flashing preloader image..."
+        $fastboot flash preloader1 $imagesPath/preloader_raw.img
+        $fastboot flash preloader2 $imagesPath/preloader_raw.img
+        echo "preloader_raw.img flashed successfully."
+    else
+        echo "No preloader file found."
     fi
 
+    if [ -f "logo.img" ]; then
+        echo "Flashing logo..."
+        $fastboot flash logo_a logo.img
+        echo "Logo flashed successfully."
+    fi
 
-
-if [ -f "logo.img" ]; then
-    echo "Flashing logo..."
-    $fastboot flash logo_a logo.img
-    echo "Logo flashed successfully."
-fi
-
-if [ -n "$bootImage" ]; then
-    echo "Flashing boot image..."
-    $fastboot flash boot_a "$bootImage"
-    echo "$bootImage flashed successfully."
-else
-    echo "No boot image specified. Skipping boot image flash."
-fi
+    if [ -n "$bootImage" ]; then
+        echo "Flashing boot image..."
+        $fastboot flash boot_a "$bootImage"
+        echo "$bootImage flashed successfully."
+    else
+        echo "No boot image specified. Skipping boot image flash."
+    fi
 
     echo "Setting active slot..."
     $fastboot set_active a
