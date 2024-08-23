@@ -7,6 +7,8 @@ on:
     paths:
       - 'installer.bat'
       - 'installer.sh'
+      - 'quick_install.sh'
+      - 'quick_install.bat'
   workflow_dispatch:
 
 jobs:
