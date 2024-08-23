@@ -54,6 +54,8 @@ jobs:
         cp -r tools/windows fastbootflasher/tools/
         cp installer.bat fastbootflasher/
         cp installer.sh fastbootflasher/
+        cp quick_install.sh fastbootflasher/
+        cp quick_install.bat fastbootflasher/
 
     - name: Create zip file
       run: |
