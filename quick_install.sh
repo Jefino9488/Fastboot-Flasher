@@ -35,10 +35,8 @@ if [ ! -f "vendor_boot.img" ]; then
     exit 1
 fi
 
-# Verifying the existence of additional images
 echo "Verifying additional images..."
 
-# List of required images
 requiredImages=(
     "apusys.img" "audio_dsp.img" "ccu.img" "dpm.img" "dtbo.img" "gpueb.img"
     "gz.img" "lk.img" "mcf_ota.img" "mcupm.img" "md1img.img" "mvpu_algo.img"
@@ -46,12 +44,10 @@ requiredImages=(
     "vcp.img" "vbmeta.img" "vendor_boot.img" "vbmeta_system.img" "vbmeta_vendor.img"
 )
 
-# Additional required files
 additionalRequiredFiles=(
     "super.img"
 )
 
-# Check for missing images
 missingImages=()
 
 for img in "${requiredImages[@]}"; do
@@ -60,7 +56,6 @@ for img in "${requiredImages[@]}"; do
     fi
 done
 
-# Check for the presence of any preloader file
 if [ ! -f "preloader_xaga.bin" ] && [ ! -f "preloader_xaga.img" ] && [ ! -f "preloader_raw.img" ]; then
     missingImages+=("preloader_xaga.bin or preloader_xaga.img or preloader_raw.img")
 fi
@@ -71,7 +66,6 @@ for img in "${additionalRequiredFiles[@]}"; do
     fi
 done
 
-# If any images are missing
 if [ ${#missingImages[@]} -ne 0 ]; then
     echo "Missing images: ${missingImages[*]}"
     echo
@@ -92,14 +86,12 @@ for img in "${requiredImages[@]}"; do
     echo "$img flashed successfully."
 done
 
-# Flash super image
 if [ -f "super.img" ]; then
     echo "Flashing super image..."
     $fastboot flash super super.img
     echo "super.img flashed successfully."
 fi
 
-# Flash preloader image
 if [ -f "$imagesPath/preloader_xaga.bin" ]; then
     echo "Flashing preloader image..."
     $fastboot flash preloader1 preloader_xaga.bin
