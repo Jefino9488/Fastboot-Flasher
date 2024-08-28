@@ -5,7 +5,7 @@ echo "========================================================"
 echo "                 Fastboot Flasher"
 echo "========================================================"
 SCRIPT_PATH=$(dirname "$(readlink -f "$0")")
-fastboot=tools/linux/platform-tools/fastboot
+fastboot="$SCRIPT_PATH/tools/linux/platform-tools/fastboot"
 [ ! -f $fastboot ] && echo "$fastboot not found." && exit 1
 [ ! -x $fastboot ] && ! chmod +x $fastboot && echo "$fastboot cannot be executed." && exit 1
 
