@@ -49,28 +49,15 @@ if /i "%formatData%" equ "Y" (
 
 cd %imagesPath%
 echo Verifying critical images...
-if not exist boot.img (
-    echo boot.img is missing. Aborting.
-    pause
-    exit
-)
-if not exist vendor_boot.img (
-    echo vendor_boot.img is missing. Aborting.
-    pause
-    exit
-)
+set "requiredImages=boot.img vendor_boot.img apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vbmeta_system.img vbmeta_vendor.img"
+set "additionalRequiredImages=super.img logo.img"
 
-echo Verifying additional images...
-set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vendor_boot.img vbmeta_system.img vbmeta_vendor.img"
-set "additionalRequiredImages=super.img"
 setlocal enabledelayedexpansion
-
 set "missingImages="
-set "allRequiredImages=%requiredImages% %additionalRequiredImages%"
 
-for %%i in (%allRequiredImages%) do (
+for %%i in (%requiredImages% %additionalRequiredImages%) do (
     if not exist %%i (
-        set "missingImages=!missingImages! %%i "
+        set "missingImages=!missingImages! %%i"
     )
 )
 
@@ -92,15 +79,52 @@ if not "!missingImages!"=="" (
     )
 )
 
-echo Flashing all images...
-
-for %%i in (%requiredImages%) do (
-    echo Flashing %%i...
-    fastboot flash %%~ni_a %%i
-    echo %%i flashed successfully.
+echo Collecting all images from the images folder...
+set "allImages="
+for %%f in (*.img) do (
+    set "allImages=!allImages! %%f"
 )
 
-if exist logo.img (
+echo Select the boot image:
+echo 1. Normal boot (boot.img)
+echo 2. Magisk patched boot (magisk_boot.img)
+set /p bootChoice="Enter 1 or 2: "
+
+if "%bootChoice%" equ "1" (
+    set bootImage=boot.img
+) else (
+    if "%bootChoice%" equ "2" (
+        set bootImage=magisk_boot.img
+    ) else (
+        echo Invalid selection. Aborting.
+        pause
+        endlocal
+        exit /B 1
+    )
+)
+
+if not exist "%bootImage%" (
+    echo Selected boot image %bootImage% is missing. Aborting.
+    pause
+    endlocal
+    exit /B 1
+)
+
+echo Flashing all images except for the boot image and special images...
+
+for %%i in (!allImages!) do (
+    if "%%~nxi" neq "%bootImage%" if "%%~nxi" neq "logo.img" if "%%~nxi" neq "super.img" (
+        echo Flashing %%i...
+        fastboot flash %%~ni_a %%i
+        echo %%i flashed successfully.
+    )
+)
+
+echo Flashing boot image...
+fastboot flash boot_a %bootImage%
+echo %bootImage% flashed successfully.
+
+if exist %imagesPath%\logo.img (
     echo Flashing logo...
     fastboot flash logo_a logo.img
     echo Logo flashed successfully.
@@ -128,10 +152,6 @@ if exist %imagesPath%\preloader_xaga.bin (
         )
     )
 )
-
-echo Flashing boot image...
-fastboot flash boot_a %bootImage%
-echo %bootImage% flashed successfully.
 
 echo Flashing system image...
 fastboot flash super super.img
