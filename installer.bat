@@ -21,12 +21,38 @@ if "%device%" equ "unknown" (
     timeout /t 5 >nul
     goto wait_for_device
 )
-if "%device%" neq "xaga" if "%device%" neq "xagapro" if "%device%" neq "xagain" (
-    echo Compatible devices: xaga, xagapro, xagain
+
+:: Read compatible devices from external file
+set "deviceFile=%SCRIPT_PATH%compatible_devices.txt"
+set "compatibleDevices="
+
+if exist "%deviceFile%" (
+    set /p compatibleDevices=<"%deviceFile%"
+) else (
+    echo Compatible devices file not found. Using default list.
+    set "compatibleDevices=xaga xagapro xagain"
+)
+
+set deviceFound=false
+
+:: Loop through each device in the compatible list
+for %%i in (%compatibleDevices%) do (
+    if /i "%%i"=="%device%" (
+        set deviceFound=true
+        goto :device_compatible
+    )
+)
+
+if "%deviceFound%"=="false" (
+    echo Compatible devices: %compatibleDevices%
     echo Your device: %device%
     pause
     exit /B 1
 )
+
+:device_compatible
+echo Device %device% is compatible.
+
 
 :main_menu
 cls
@@ -70,6 +96,7 @@ if /i "%formatData%" equ "Y" (
     echo Skipping data formatting.
 )
 
+:: Boot Image Selection
 echo Boot Type:
 echo 1. Magisk [magisk_boot.img]
 echo 2. Default [boot.img]
@@ -78,6 +105,7 @@ echo Select boot image type:
 set /p bootChoice=
 echo.
 
+:: Set bootImage variable based on user choice
 if "%bootChoice%" equ "1" (
     set bootImage=magisk_boot.img
     echo Selected magisk_boot.img
@@ -91,36 +119,23 @@ if "%bootChoice%" equ "1" (
 )
 
 cd %imagesPath%
-echo Verifying critical images...
-if not exist boot.img (
-    echo boot.img is missing. Aborting.
-    pause
-    call :main_menu
-)
-if not exist vendor_boot.img (
-    echo vendor_boot.img is missing. Aborting.
-    pause
-    call :main_menu
-)
 
-echo Verifying additional images...
-set "requiredImages=apusys.img audio_dsp.img ccu.img dpm.img dtbo.img gpueb.img gz.img lk.img mcf_ota.img mcupm.img md1img.img mvpu_algo.img pi_img.img scp.img spmfw.img sspm.img tee.img vcp.img vbmeta.img vendor_boot.img vbmeta_system.img vbmeta_vendor.img"
-set "additionalRequiredImages=super.img"
-setlocal enabledelayedexpansion
+:: Define required images list (excluding boot.img and magisk_boot.img)
+set "requiredImages=super.img vbmeta.img vbmeta_system.img vbmeta_vendor.img"
 
+echo Verifying required images in the folder...
+
+:: Initialize variable to store missing images
 set "missingImages="
-set "allRequiredImages=%requiredImages% %additionalRequiredImages%"
 
-for %%i in (%allRequiredImages%) do (
+:: Check if each required image exists in the images folder
+for %%i in (%requiredImages%) do (
     if not exist %%i (
-        set "missingImages=!missingImages! %%i "
+        set "missingImages=!missingImages! %%i"
     )
 )
 
-if not exist preloader_xaga.bin if not exist preloader_xaga.img if not exist preloader_raw.img (
-    set "missingImages=!missingImages! preloader_xaga.bin preloader_xaga.img preloader_raw.img"
-)
-
+:: If there are missing images, inform the user
 if not "!missingImages!"=="" (
     echo Missing images: !missingImages!
     echo.
@@ -135,51 +150,28 @@ if not "!missingImages!"=="" (
     )
 )
 
-echo Flashing all images...
+echo Flashing all images in the folder, excluding boot and magisk_boot...
 
-for %%i in (%requiredImages%) do (
-    echo Flashing %%i...
-    fastboot flash %%~ni_a %%i
-    echo %%i flashed successfully.
-)
-
-if exist logo.img (
-    echo Flashing logo...
-    fastboot flash logo_a logo.img
-    echo Logo flashed successfully.
-)
-
-if exist %imagesPath%\preloader_xaga.bin (
-    echo Flashing preloader...
-    fastboot flash preloader1 preloader_xaga.bin
-    fastboot flash preloader2 preloader_xaga.bin
-    echo Preloader flashed successfully.
-) else (
-    if exist %imagesPath%\preloader_xaga.img (
-        echo Flashing preloader...
-        fastboot flash preloader1 preloader_xaga.img
-        fastboot flash preloader2 preloader_xaga.img
-        echo Preloader flashed successfully.
-    ) else (
-        if exist %imagesPath%\preloader_raw.img (
-            echo Flashing preloader...
-            fastboot flash preloader1 preloader_raw.img
-            fastboot flash preloader2 preloader_raw.img
-            echo Preloader flashed successfully.
-        ) else (
-            echo No preloader file found.
-        )
+:: Flash all found .img files, but skip boot.img and magisk_boot.img
+for %%i in (*.img) do (
+    if /i "%%~nxi" neq "boot.img" if /i "%%~nxi" neq "magisk_boot.img" (
+        set imgName=%%~ni
+        echo Flashing %%i...
+        fastboot flash !imgName!_a %%i
+        echo %%i flashed successfully.
     )
 )
 
-
-echo Flashing boot image...
-fastboot flash boot_a %bootImage%
-echo %bootImage% flashed successfully.
-
-echo Flashing system image...
-fastboot flash super super.img
-echo super.img flashed successfully.
+:: Flash the selected boot image only
+if exist %imagesPath%\%bootImage% (
+    echo Flashing %bootImage%...
+    fastboot flash boot_a %bootImage%
+    echo %bootImage% flashed successfully.
+) else (
+    echo %bootImage% not found. Aborting.
+    pause
+    call :main_menu
+)
 
 echo Setting active slot...
 fastboot set_active a
@@ -196,23 +188,20 @@ echo ========================================================
 echo                   Additional Options
 echo ========================================================
 echo 1. Flash Boot Image
-echo 2. Flash Vendor Boot
-echo 3. Format Data
-echo 4. Custom Command
-echo 5. Return to Main Menu
+echo 2. Format Data
+echo 3. Custom Command
+echo 4. Return to Main Menu
 echo ========================================================
-set /p option=Enter your choice (1/2/3/4/5):
+set /p option=Enter your choice (1/2/3/4):
 echo.
 
 if "%option%" equ "1" (
     call :flash_boot
 ) else if "%option%" equ "2" (
-    call :flash_vendor_boot
-) else if "%option%" equ "3" (
     call :format_data
-) else if "%option%" equ "4" (
+) else if "%option%" equ "3" (
     call :custom_command
-) else if "%option%" equ "5" (
+) else if "%option%" equ "4" (
     call :main_menu
 ) else (
     echo Invalid option. Please enter a valid option.
@@ -229,6 +218,7 @@ echo Select boot image type:
 set /p bootChoice=
 echo.
 
+:: Set bootImage variable based on user choice for additional options
 if "%bootChoice%" equ "1" (
     set bootImage=magisk_boot.img
     echo Selected magisk_boot.img
@@ -241,45 +231,13 @@ if "%bootChoice%" equ "1" (
     goto flash_boot
 )
 
+:: Flash the selected boot image only
 if exist %imagesPath%\%bootImage% (
     echo Flashing %bootImage%...
     fastboot flash boot_a %bootImage%
     echo %bootImage% flashed successfully.
 ) else (
     echo %bootImage% not found.
-)
-
-pause
-call :additional_options
-
-:flash_vendor_boot
-cd %imagesPath%
-echo Vendor Boot Type:
-echo 1. Stock Vendor Boot [vendor_boot.img]
-echo 2. TWRP Vendor Boot [twrp_vendor_boot.img]
-echo.
-echo Select vendor boot image type:
-set /p vendorBootChoice=
-echo.
-
-if "%vendorBootChoice%" equ "1" (
-    set vendorBootImage=vendor_boot.img
-    echo Selected vendor_boot.img
-) else if "%vendorBootChoice%" equ "2" (
-    set vendorBootImage=twrp_vendor_boot.img
-    echo Selected twrp_vendor_boot.img
-) else (
-    echo Invalid vendor boot image selection. Please select a valid vendor boot.
-    timeout /nobreak /t 5 >nul 2>&1
-    goto flash_vendor_boot
-)
-
-if exist %imagesPath%\%vendorBootImage% (
-    echo Flashing %vendorBootImage%...
-    fastboot flash vendor_boot_a %vendorBootImage%
-    echo %vendorBootImage% flashed successfully.
-) else (
-    echo %vendorBootImage% not found.
 )
 
 pause
