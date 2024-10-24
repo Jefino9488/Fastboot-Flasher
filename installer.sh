@@ -60,7 +60,6 @@ if [ ! -f "vendor_boot.img" ]; then
     exit 1
 fi
 
-# Check if all required images are present
 requiredImages=(
     "dtbo.img" "vbmeta.img" "vendor_boot.img" "vbmeta_system.img" "super.img"
 )
