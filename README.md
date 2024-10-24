@@ -2,7 +2,7 @@
 
 ## Overview
 
-Welcome to the Fastboot Flasher! This tool is designed to simplify and secure the process of flashing ROMs, boot images, and TWRP on Android devices. Whether you're a beginner or an experienced user, this tool streamlines the flashing process with a user-friendly interface.
+Welcome to the Fastboot Flasher! This tool is designed to simplify and secure the process of flashing ROMs, boot images on Android devices. Whether you're a beginner or an experienced user, this tool streamlines the flashing process with a user-friendly interface.
 
 ## Features
 
@@ -30,32 +30,7 @@ Welcome to the Fastboot Flasher! This tool is designed to simplify and secure th
 - **ROM Flashing:**
   - Flash ROMs with a simple selection process.
   - Automatically detects the presence of ROM images in the `images` folder.
-  - Place ROM images according to the following naming conventions:
-    - `apusys.img`
-    - `audio_dsp.img`
-    - `ccu.img`
-    - `dpm.img`
-    - `dtbo.img`
-    - `gpueb.img`
-    - `gz.img`
-    - `lk.img`
-    - `logo.img` (optional)
-    - `mcf_ota.img`
-    - `mcupm.img`
-    - `md1img.img`
-    - `mvpu_algo.img`
-    - `pi_img.img`
-    - `preloader_xaga.bin`
-    - `scp.img`
-    - `spmfw.img`
-    - `sspm.img`
-    - `tee.img`
-    - `vcp.img`
-    - `vbmeta.img`
-    - `vbmeta_system.img`
-    - `vbmeta_vendor.img`
-    - `super.img`
-    - `cust.img` (optional)
+  - Place ROM images in the `images` folder.
 
 - **Verification and Error Handling:**
   - Ensures the availability of required images before proceeding with the flashing process.
@@ -71,6 +46,11 @@ Welcome to the Fastboot Flasher! This tool is designed to simplify and secure th
       - If the user types `yes`, it will continue the flashing process with the available images.
       - If the user types anything other than `yes`, it will return to the main menu.
 
+## Compatible Devices
+
+The Fastboot Flasher checks for the compatibility of the connected device before proceeding with the flashing process.
+Add your device name to the `compactable_list.txt` file to make it compatible with the Fastboot Flasher.
+
 ## Usage
 
 ### Prerequisites
@@ -79,15 +59,6 @@ Welcome to the Fastboot Flasher! This tool is designed to simplify and secure th
 2. Place the required images in the `images` folder.
 3. Run the `installer.bat` file.
 4. Follow the on-screen instructions.
-
-### Flashing Process
-
-1. Choose an option from the main menu:
-   - 1: Flash ROM
-   - 2: Additional Options
-   - 3: Exit / Reboot
-
-2. Follow the on-screen instructions for the selected option.
 
 ## Important Notes
 
@@ -107,3 +78,6 @@ This is self-developed software created to make the flashing process easy and se
 
 Thank you for choosing the Fastboot Flasher. Happy flashing!
 
+--- 
+
+Feel free to adjust any sections further if needed!
