@@ -23,7 +23,7 @@ if "%device%" equ "unknown" (
 )
 
 set "compatibleDevice=false"
-for /f "delims=" %%i in (%SCRIPT_PATH%\compactable_list.txt) do (
+for /f "delims=" %%i in (%SCRIPT_PATH%\compatible_list.txt) do (
     if "%device%" equ "%%i" set "compatibleDevice=true"
 )
 
