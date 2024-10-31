@@ -1,17 +1,17 @@
-#!/bin/bash
-echo "========================================================"
-echo "                 Fastboot Flasher"
-echo "========================================================"
+#!/bin/sh
+printf "========================================================\n"
+printf "                 Fastboot Flasher\n"
+printf "========================================================\n"
 
-SCRIPT_PATH=$(dirname "$(readlink -f "$0")")
+SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)"
 fastboot="$SCRIPT_PATH/tools/linux/platform-tools/fastboot"
 if [ ! -f "$fastboot" ]; then
-    echo "$fastboot not found."
+    printf "%s not found.\n" "$fastboot"
     exit 1
 fi
 
 if [ ! -x "$fastboot" ]; then
-    chmod +x "$fastboot" || { echo "$fastboot cannot be executed."; exit 1; }
+    chmod +x "$fastboot" || { printf "%s cannot be executed.\n" "$fastboot"; exit 1; }
 fi
 
 if [ ! -d "$SCRIPT_PATH/images" ]; then
@@ -19,91 +19,88 @@ if [ ! -d "$SCRIPT_PATH/images" ]; then
 fi
 imagesPath="$SCRIPT_PATH/images"
 
-echo "Do you want to format data? (Y/N)"
-read -rp "" formatData
+printf "Do you want to format data? (Y/N)\n"
+read formatData
 
-if [[ "$formatData" =~ ^[Yy]$ ]]; then
-    echo "Formatting data..."
-    $fastboot erase metadata
-    $fastboot erase userdata
-    echo "Data formatted successfully."
+if [ "$formatData" = "Y" ] || [ "$formatData" = "y" ]; then
+    printf "Formatting data...\n"
+    "$fastboot" erase metadata
+    "$fastboot" erase userdata
+    printf "Data formatted successfully.\n"
 else
-    echo "Skipping data formatting."
+    printf "Skipping data formatting.\n"
 fi
 
-echo "Boot Type:"
-echo "1. Magisk [magisk_boot.img]"
-echo "2. Default [boot.img]"
-echo "Select boot image type:"
-read -rp "" bootChoice
+printf "Boot Type:\n"
+printf "1. Magisk [magisk_boot.img]\n"
+printf "2. Default [boot.img]\n"
+printf "Select boot image type:\n"
+read bootChoice
 
 if [ "$bootChoice" = "1" ]; then
     bootImage="magisk_boot.img"
-    echo "Selected magisk_boot.img"
+    printf "Selected magisk_boot.img\n"
 elif [ "$bootChoice" = "2" ]; then
     bootImage="boot.img"
-    echo "Selected boot.img"
+    printf "Selected boot.img\n"
 else
-    echo "Invalid boot image selection. Aborting."
+    printf "Invalid boot image selection. Aborting.\n"
     exit 1
 fi
 
-cd "$imagesPath" || exit
+cd "$imagesPath" || exit 1
 
-echo "Verifying critical images..."
+printf "Verifying critical images...\n"
 if [ ! -f "$bootImage" ]; then
-    echo "$bootImage is missing. Aborting."
+    printf "%s is missing. Aborting.\n" "$bootImage"
     exit 1
 fi
 if [ ! -f "vendor_boot.img" ]; then
-    echo "vendor_boot.img is missing. Aborting."
+    printf "vendor_boot.img is missing. Aborting.\n"
     exit 1
 fi
 
-requiredImages=(
-    "dtbo.img" "vbmeta.img" "vendor_boot.img" "vbmeta_system.img" "super.img"
-)
+requiredImages="dtbo.img vbmeta.img vendor_boot.img vbmeta_system.img super.img"
+missingImages=""
 
-missingImages=()
-
-for img in "${requiredImages[@]}"; do
+for img in $requiredImages; do
     if [ ! -f "$img" ]; then
-        missingImages+=("$img")
+        missingImages="$missingImages $img"
     fi
 done
 
-if [ ${#missingImages[@]} -ne 0 ]; then
-    echo "Missing critical images: ${missingImages[*]}"
-    echo "Some required images are missing. Do you want to continue anyway? (Type 'yes' to continue)"
-    read -rp "" continue
+if [ -n "$missingImages" ]; then
+    printf "Missing critical images:%s\n" "$missingImages"
+    printf "Some required images are missing. Do you want to continue anyway? (Type 'yes' to continue)\n"
+    read continue
     if [ "$continue" != "yes" ]; then
-        echo "Aborting flash process."
+        printf "Aborting flash process.\n"
         exit 1
     fi
 fi
 
-echo "Flashing all images..."
+printf "Flashing all images...\n"
 
 for img in *.img; do
-    imgName="${img%.*}"
+    imgName=$(echo "$img" | sed 's/\..*//')
     if [ "$img" != "$bootImage" ] && [ "$img" != "super.img" ]; then
-        echo "Flashing $img..."
-        $fastboot flash "${imgName}_a" "$img"
-        echo "$img flashed successfully."
+        printf "Flashing %s...\n" "$img"
+        "$fastboot" flash "${imgName}_a" "$img"
+        printf "%s flashed successfully.\n" "$img"
     fi
 done
 
-echo "Flashing boot image..."
-$fastboot flash boot_a "$bootImage"
-echo "$bootImage flashed successfully."
+printf "Flashing boot image...\n"
+"$fastboot" flash boot_a "$bootImage"
+printf "%s flashed successfully.\n" "$bootImage"
 
-echo "Flashing super image..."
-$fastboot flash super super.img
-echo "super.img flashed successfully."
+printf "Flashing super image...\n"
+"$fastboot" flash super super.img
+printf "super.img flashed successfully.\n"
 
-echo "Setting active slot..."
-$fastboot set_active a
-echo "Slot a activated successfully."
+printf "Setting active slot...\n"
+"$fastboot" set_active a
+printf "Slot a activated successfully.\n"
 
-echo "Flashing process completed. Rebooting..."
-$fastboot reboot
+printf "Flashing process completed. Rebooting...\n"
+"$fastboot" reboot
