@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - xaga
     paths:
       - 'installer.bat'
       - 'installer.sh'
