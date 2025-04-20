@@ -2,6 +2,8 @@
 printf "========================================================\n"
 printf "                 Fastboot Flasher\n"
 printf "========================================================\n"
+printf "       Connect your device in fastboot mode.\n"
+printf "========================================================\n"
 
 SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)"
 fastboot="$SCRIPT_PATH/tools/linux/platform-tools/fastboot"
@@ -20,7 +22,7 @@ fi
 imagesPath="$SCRIPT_PATH/images"
 
 printf "Do you want to format data? (Y/N)\n"
-read formatData
+read -r formatData
 
 if [ "$formatData" = "Y" ] || [ "$formatData" = "y" ]; then
     printf "Formatting data...\n"
@@ -33,18 +35,23 @@ fi
 
 printf "Boot Type:\n"
 printf "1. Magisk [magisk_boot.img]\n"
-printf "2. Default [boot.img]\n"
+printf "2. KernelSU [ksu_boot.img]\n"
+printf "3. Default [boot.img]\n"
 printf "Select boot image type:\n"
-read bootChoice
+read -r bootChoice
 
 if [ "$bootChoice" = "1" ]; then
     bootImage="magisk_boot.img"
     printf "Selected magisk_boot.img\n"
 elif [ "$bootChoice" = "2" ]; then
+    bootImage="ksu_boot.img"
+    printf "Selected ksu_boot.img\n"
+elif [ "$bootChoice" = "3" ]; then
     bootImage="boot.img"
     printf "Selected boot.img\n"
 else
-    printf "Invalid boot image selection. Aborting.\n"
+    printf "Invalid boot image selection. Please select a valid boot.\n"
+    sleep 5
     exit 1
 fi
 
@@ -60,7 +67,8 @@ if [ ! -f "vendor_boot.img" ]; then
     exit 1
 fi
 
-requiredImages="dtbo.img vbmeta.img vendor_boot.img vbmeta_system.img super.img"
+printf "Verifying additional images...\n"
+requiredImages="dtbo.img vbmeta.img vendor_boot.img vbmeta_system.img super.img preloader_xaga.bin boot.img"
 missingImages=""
 
 for img in $requiredImages; do
@@ -70,25 +78,28 @@ for img in $requiredImages; do
 done
 
 if [ -n "$missingImages" ]; then
-    printf "Missing critical images:%s\n" "$missingImages"
+    printf "Missing images:%s\n" "$missingImages"
     printf "Some required images are missing. Do you want to continue anyway? (Type 'yes' to continue)\n"
-    read continue
+    read -r continue
     if [ "$continue" != "yes" ]; then
-        printf "Aborting flash process.\n"
+        printf "Aborting operation.\n"
         exit 1
     fi
 fi
 
 printf "Flashing all images...\n"
-
 for img in *.img; do
     imgName=$(echo "$img" | sed 's/\..*//')
-    if [ "$img" != "$bootImage" ] && [ "$img" != "super.img" ]; then
+    if [ "$img" != "boot.img" ] && [ "$img" != "magisk_boot.img" ] && [ "$img" != "ksu_boot.img" ] && [ "$img" != "super.img" ] && [ "$img" != "preloader_xaga.bin" ]; then
         printf "Flashing %s...\n" "$img"
-        "$fastboot" flash "${imgName}_a" "$img"
+        "$fastboot" flash "${img-name}_a" "$img"
         printf "%s flashed successfully.\n" "$img"
     fi
 done
+
+printf "Flashing Engineering Preloader...\n"
+"$fastboot" flash preloader1 preloader_xaga.bin
+"$fastboot" flash preloader2 preloader_xaga.bin
 
 printf "Flashing boot image...\n"
 "$fastboot" flash boot_a "$bootImage"
@@ -102,5 +113,7 @@ printf "Setting active slot...\n"
 "$fastboot" set_active a
 printf "Slot a activated successfully.\n"
 
-printf "Flashing process completed. Rebooting...\n"
+printf "Press Enter to reboot (check if everything went good before reboot)...\n"
+read -r
+printf "Rebooting...\n"
 "$fastboot" reboot
