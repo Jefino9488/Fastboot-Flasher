@@ -112,7 +112,7 @@ echo.
 echo Flashing all images...
 for %%i in (*.img) do (
     set "imgName=%%~ni"
-    if /i "%%~nxi" neq "boot.img" if /i "%%~nxi" neq "magisk_boot.img" if /i "%%~nxi" neq "super.img" if /i "%%~nxi" neq "ksyu_boot.img" if /i "%%~nxi" neq "preloader_xaga.bin" (
+    if /i "%%~nxi" neq "boot.img" if /i "%%~nxi" neq "magisk_boot.img" if /i "%%~nxi" neq "super.img" if /i "%%~nxi" neq "ksu_boot.img" if /i "%%~nxi" neq "preloader_xaga.bin" if /i "%%~nxi" neq "cust.img" if /i "%%~nxi" neq "img" (
         echo Flashing %%i...
         fastboot flash !imgName!_a %%i
         echo %%i flashed successfully.

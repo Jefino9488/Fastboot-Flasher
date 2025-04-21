@@ -28,6 +28,7 @@ if [ "$formatData" = "Y" ] || [ "$formatData" = "y" ]; then
     printf "Formatting data...\n"
     "$fastboot" erase metadata
     "$fastboot" erase userdata
+    "$fastboot" erase cust
     printf "Data formatted successfully.\n"
 else
     printf "Skipping data formatting.\n"
