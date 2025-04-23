@@ -17,12 +17,32 @@ set "imagesPath=%SCRIPT_PATH%\images"
 set "bootPath=%SCRIPT_PATH%\boot"
 if not exist "%bootPath%" mkdir "%bootPath%"
 
+:: Verify fastboot binary
+if not exist "%TOOLS%\fastboot.exe" (
+    echo Error: fastboot.exe not found in %TOOLS%.
+    echo Please ensure platform tools are correctly installed.
+    pause
+    exit /b 1
+)
+
 :: Wait for device
 :wait_for_device
+echo Checking for device...
+"%TOOLS%\fastboot.exe" devices >nul 2>&1
+if errorlevel 1 (
+    echo No device detected. Ensure the device is in fastboot mode and connected.
+    echo Retrying in 5 seconds...
+    timeout /t 5 >nul
+    goto wait_for_device
+)
+
+:: Get product name
 set device=unknown
-for /f "tokens=2" %%D in ('fastboot getvar product 2^>^&1 ^| findstr /l /b /c:"product:"') do set device=%%D
+"%TOOLS%\fastboot.exe" getvar product > debug.txt 2>&1
+for /f "tokens=2" %%D in ('type debug.txt ^| findstr /l /b /c:"product:"') do set device=%%D
 if "%device%"=="unknown" (
-    echo No device detected. Waiting for device...
+    echo Failed to retrieve product name. Check debug.txt for details.
+    echo Retrying in 5 seconds...
     timeout /t 5 >nul
     goto wait_for_device
 )
@@ -34,47 +54,21 @@ echo ========================================================
 echo             Device detected: %device%
 echo --------------------------------------------------------
 
-:: Check device compatibility
-set "compatibleDevices=xaga xagapro xagain"
-echo %compatibleDevices% | findstr /i /c:"%device%" >nul
-if errorlevel 1 (
-    echo Warning: Device %device% is not in the compatible list (%compatibleDevices%).
-    echo Please ensure compatibility before proceeding.
-    pause
-)
-
 :: Ask to format data
 echo Do you want to format data? (Y/N)
 set /p formatData=
 if /i "%formatData%"=="Y" (
     echo Formatting data...
-    fastboot erase metadata
-    if errorlevel 1 (
-        echo Failed to erase metadata. Aborting.
-        pause
-        exit /b 1
-    )
-    fastboot erase userdata
-    if errorlevel 1 (
-        echo Failed to erase userdata. Aborting.
-        pause
-        exit /b 1
-    )
-    fastboot erase cust
-    if errorlevel 1 (
-        echo Failed to erase cust. Aborting.
-        pause
-        exit /b 1
-    )
+    "%TOOLS%\fastboot.exe" erase metadata >> fastboot_log.txt 2>&1
+    echo Erased metadata.
+    "%TOOLS%\fastboot.exe" erase userdata >> fastboot_log.txt 2>&1
+    echo Erased userdata.
+    "%TOOLS%\fastboot.exe" erase cust >> fastboot_log.txt 2>&1
+    echo Erased cust.
     echo Data formatted successfully.
 ) else (
     echo Skipping data formatting.
-    fastboot erase package_cache
-    if errorlevel 1 (
-        echo Failed to erase package_cache. Aborting.
-        pause
-        exit /b 1
-    )
+    "%TOOLS%\fastboot.exe" erase package_cache >> fastboot_log.txt 2>&1
     echo package_cache erased successfully.
 )
 
@@ -84,8 +78,7 @@ echo.
 echo Boot Type:
 echo 1. Magisk [magisk.img]
 echo 2. KernelSU [ksu.img]
-echo 3. KernelSU ETO [ksu_eto.img]
-echo 4. Stock [stock.img]
+echo 3. Stock [boot.img]
 echo.
 echo Select boot image type:
 set /p bootChoice=
@@ -97,11 +90,8 @@ if "%bootChoice%"=="1" (
     set "bootImage=ksu.img"
     echo Selected ksu.img
 ) else if "%bootChoice%"=="3" (
-    set "bootImage=ksu_eto.img"
-    echo Selected ksu_eto.img
-) else if "%bootChoice%"=="4" (
-    set "bootImage=stock.img"
-    echo Selected stock.img
+    set "bootImage=boot.img"
+    echo Selected boot.img
 ) else (
     echo Invalid boot image selection. Please select a valid boot.
     timeout /nobreak /t 5 >nul
@@ -172,14 +162,9 @@ if defined item[!j!] (
     set "partition=!item[%k%]!"
     echo Flashing !imgFile! to !partition!...
     if /i "!imgFile:~0,6!"=="vbmeta" (
-        fastboot flash !partition! !imgFile! --disable-verity --disable-verification
+        "%TOOLS%\fastboot.exe" flash !partition! !imgFile! --disable-verity --disable-verification >> fastboot_log.txt 2>&1
     ) else (
-        fastboot flash !partition! !imgFile!
-    )
-    if errorlevel 1 (
-        echo Failed to flash !imgFile!. Aborting.
-        pause
-        exit /b 1
+        "%TOOLS%\fastboot.exe" flash !partition! !imgFile! >> fastboot_log.txt 2>&1
     )
     echo !imgFile! flashed successfully.
     set /a j+=2
@@ -188,68 +173,37 @@ if defined item[!j!] (
 
 echo.
 echo Flashing Engineering Preloader...
-fastboot flash preloader1 preloader_xaga.bin
-if errorlevel 1 (
-    echo Failed to flash preloader1. Aborting.
-    pause
-    exit /b 1
-)
-fastboot flash preloader2 preloader_xaga.bin
-if errorlevel 1 (
-    echo Failed to flash preloader2. Aborting.
-    pause
-    exit /b 1
-)
+"%TOOLS%\fastboot.exe" flash preloader1 preloader_xaga.bin >> fastboot_log.txt 2>&1
+echo Preloader1 flashed.
+"%TOOLS%\fastboot.exe" flash preloader2 preloader_xaga.bin >> fastboot_log.txt 2>&1
+echo Preloader2 flashed.
 echo Preloader flashed successfully.
 
 echo.
 echo Flashing boot image...
 cd /d "%bootPath%"
-fastboot flash boot_a %bootImage%
-if errorlevel 1 (
-    echo Failed to flash %bootImage%. Aborting.
-    pause
-    exit /b 1
-)
+"%TOOLS%\fastboot.exe" flash boot_a %bootImage% >> fastboot_log.txt 2>&1
 echo %bootImage% flashed successfully.
 
 echo.
 echo Flashing system image...
 cd /d "%imagesPath%"
-fastboot flash super super.img
-if errorlevel 1 (
-    echo Failed to flash super.img. Aborting.
-    pause
-    exit /b 1
-)
+"%TOOLS%\fastboot.exe" flash super super.img >> fastboot_log.txt 2>&1
 echo super.img flashed successfully.
 
 echo.
 echo Erasing frp...
-fastboot erase frp
-if errorlevel 1 (
-    echo Failed to erase frp. Aborting.
-    pause
-    exit /b 1
-)
+"%TOOLS%\fastboot.exe" erase frp >> fastboot_log.txt 2>&1
 echo Erased frp successfully.
 
 echo.
 echo Setting active slot...
-fastboot set_active a
-if errorlevel 1 (
-    echo Failed to set active slot. Aborting.
-    pause
-    exit /b 1
-)
+"%TOOLS%\fastboot.exe" set_active a >> fastboot_log.txt 2>&1
 echo Slot a activated successfully.
 
 echo.
 echo Press Enter to reboot (check if everything went good before reboot)...
 pause
-fastboot reboot
-if errorlevel 1 (
-    echo Failed to reboot. Please check the device manually.
-    pause
-)
+"%TOOLS%\fastboot.exe" reboot >> fastboot_log.txt 2>&1
+echo Reboot initiated.
 exit
