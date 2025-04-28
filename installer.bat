@@ -38,10 +38,9 @@ if errorlevel 1 (
 
 :: Get product name
 set device=unknown
-"%TOOLS%\fastboot.exe" getvar product > debug.txt 2>&1
-for /f "tokens=2" %%D in ('type debug.txt ^| findstr /l /b /c:"product:"') do set device=%%D
+for /f "tokens=2" %%D in ('"%TOOLS%\fastboot.exe" getvar product 2^>^&1') do set device=%%D
 if "%device%"=="unknown" (
-    echo Failed to retrieve product name. Check debug.txt for details.
+    echo Failed to retrieve product name.
     echo Retrying in 5 seconds...
     timeout /t 5 >nul
     goto wait_for_device
@@ -59,16 +58,16 @@ echo Do you want to format data? (Y/N)
 set /p formatData=
 if /i "%formatData%"=="Y" (
     echo Formatting data...
-    "%TOOLS%\fastboot.exe" erase metadata >> fastboot_log.txt 2>&1
+    "%TOOLS%\fastboot.exe" erase metadata
     echo Erased metadata.
-    "%TOOLS%\fastboot.exe" erase userdata >> fastboot_log.txt 2>&1
+    "%TOOLS%\fastboot.exe" erase userdata
     echo Erased userdata.
-    "%TOOLS%\fastboot.exe" erase cust >> fastboot_log.txt 2>&1
+    "%TOOLS%\fastboot.exe" erase cust
     echo Erased cust.
     echo Data formatted successfully.
 ) else (
     echo Skipping data formatting.
-    "%TOOLS%\fastboot.exe" erase package_cache >> fastboot_log.txt 2>&1
+    "%TOOLS%\fastboot.exe" erase package_cache
     echo package_cache erased successfully.
 )
 
@@ -162,9 +161,9 @@ if defined item[!j!] (
     set "partition=!item[%k%]!"
     echo Flashing !imgFile! to !partition!...
     if /i "!imgFile:~0,6!"=="vbmeta" (
-        "%TOOLS%\fastboot.exe" flash !partition! !imgFile! --disable-verity --disable-verification >> fastboot_log.txt 2>&1
+        "%TOOLS%\fastboot.exe" flash !partition! !imgFile! --disable-verity --disable-verification
     ) else (
-        "%TOOLS%\fastboot.exe" flash !partition! !imgFile! >> fastboot_log.txt 2>&1
+        "%TOOLS%\fastboot.exe" flash !partition! !imgFile!
     )
     echo !imgFile! flashed successfully.
     set /a j+=2
@@ -173,37 +172,37 @@ if defined item[!j!] (
 
 echo.
 echo Flashing Engineering Preloader...
-"%TOOLS%\fastboot.exe" flash preloader1 preloader_xaga.bin >> fastboot_log.txt 2>&1
+"%TOOLS%\fastboot.exe" flash preloader1 preloader_xaga.bin
 echo Preloader1 flashed.
-"%TOOLS%\fastboot.exe" flash preloader2 preloader_xaga.bin >> fastboot_log.txt 2>&1
+"%TOOLS%\fastboot.exe" flash preloader2 preloader_xaga.bin
 echo Preloader2 flashed.
 echo Preloader flashed successfully.
 
 echo.
 echo Flashing boot image...
 cd /d "%bootPath%"
-"%TOOLS%\fastboot.exe" flash boot_a %bootImage% >> fastboot_log.txt 2>&1
+"%TOOLS%\fastboot.exe" flash boot_a %bootImage%
 echo %bootImage% flashed successfully.
 
 echo.
 echo Flashing system image...
 cd /d "%imagesPath%"
-"%TOOLS%\fastboot.exe" flash super super.img >> fastboot_log.txt 2>&1
+"%TOOLS%\fastboot.exe" flash super super.img
 echo super.img flashed successfully.
 
 echo.
 echo Erasing frp...
-"%TOOLS%\fastboot.exe" erase frp >> fastboot_log.txt 2>&1
+"%TOOLS%\fastboot.exe" erase frp
 echo Erased frp successfully.
 
 echo.
 echo Setting active slot...
-"%TOOLS%\fastboot.exe" set_active a >> fastboot_log.txt 2>&1
+"%TOOLS%\fastboot.exe" set_active a
 echo Slot a activated successfully.
 
 echo.
 echo Press Enter to reboot (check if everything went good before reboot)...
 pause
-"%TOOLS%\fastboot.exe" reboot >> fastboot_log.txt 2>&1
+"%TOOLS%\fastboot.exe" reboot
 echo Reboot initiated.
 exit
