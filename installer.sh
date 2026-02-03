@@ -1,106 +1,173 @@
-#!/bin/sh
-printf "========================================================\n"
-printf "                 Fastboot Flasher\n"
-printf "========================================================\n"
+#!/bin/bash
 
+# ========================================================
+#                 Fastboot Flasher
+# ========================================================
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Paths
 SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)"
-fastboot="$SCRIPT_PATH/tools/linux/platform-tools/fastboot"
+fastboot="$SCRIPT_PATH/tools/linux/fastboot"
+imagesPath="$SCRIPT_PATH/images"
+configFile="$SCRIPT_PATH/config.txt"
+
+printf "${BLUE}========================================================${NC}\n"
+printf "${BLUE}                 Fastboot Flasher${NC}\n"
+printf "${BLUE}========================================================${NC}\n"
+
+# ========================================================
+# Check fastboot
+# ========================================================
 if [ ! -f "$fastboot" ]; then
-    printf "%s not found.\n" "$fastboot"
+    printf "${RED}%s not found.${NC}\n" "$fastboot"
     exit 1
 fi
 
 if [ ! -x "$fastboot" ]; then
-    chmod +x "$fastboot" || { printf "%s cannot be executed.\n" "$fastboot"; exit 1; }
+    chmod +x "$fastboot" || { printf "${RED}%s cannot be executed.${NC}\n" "$fastboot"; exit 1; }
 fi
 
-if [ ! -d "$SCRIPT_PATH/images" ]; then
-    mkdir "$SCRIPT_PATH/images"
+# ========================================================
+# Parse config.txt
+# ========================================================
+if [ ! -f "$configFile" ]; then
+    printf "${RED}ERROR: config.txt not found!${NC}\n"
+    exit 1
 fi
-imagesPath="$SCRIPT_PATH/images"
 
-printf "Do you want to format data? (Y/N)\n"
-read formatData
+# Read config file (skip comments)
+while IFS='=' read -r key value; do
+    # Skip empty lines and comments
+    [[ -z "$key" || "$key" =~ ^# ]] && continue
+    # Remove leading/trailing whitespace
+    key=$(echo "$key" | xargs)
+    value=$(echo "$value" | xargs)
+    declare "$key=$value"
+done < "$configFile"
 
-if [ "$formatData" = "Y" ] || [ "$formatData" = "y" ]; then
-    printf "Formatting data...\n"
+printf "${BLUE}Configuration loaded:${NC}\n"
+printf "  Device: %s\n" "$DEVICE"
+printf "  Compatible: %s\n" "$COMPATIBLE"
+printf "  Preloader: %s\n" "$PRELOADER"
+printf "  Disable Verity: %s\n" "$DISABLE_VERITY"
+printf "${BLUE}--------------------------------------------------------${NC}\n"
+
+# ========================================================
+# Format data prompt
+# ========================================================
+printf "${BLUE}Do you want to format data? (Y/N): ${NC}"
+read -r formatData
+
+if [[ "$formatData" =~ ^[Yy]$ ]]; then
+    printf "${YELLOW}Formatting data...${NC}\n"
     "$fastboot" erase metadata
     "$fastboot" erase userdata
-    printf "Data formatted successfully.\n"
+    "$fastboot" erase frp
+    printf "${GREEN}Data formatted successfully.${NC}\n"
 else
-    printf "Skipping data formatting.\n"
+    printf "${BLUE}Skipping data formatting.${NC}\n"
 fi
 
-printf "Boot Type:\n"
-printf "1. Magisk [magisk_boot.img]\n"
-printf "2. Default [boot.img]\n"
-printf "Select boot image type:\n"
-read bootChoice
-
-if [ "$bootChoice" = "1" ]; then
-    bootImage="magisk_boot.img"
-    printf "Selected magisk_boot.img\n"
-elif [ "$bootChoice" = "2" ]; then
-    bootImage="boot.img"
-    printf "Selected boot.img\n"
-else
-    printf "Invalid boot image selection. Aborting.\n"
+# ========================================================
+# Navigate to images directory
+# ========================================================
+if [ ! -d "$imagesPath" ]; then
+    printf "${RED}Images directory %s not found. Aborting.${NC}\n" "$imagesPath"
     exit 1
 fi
-
 cd "$imagesPath" || exit 1
 
-printf "Verifying critical images...\n"
-if [ ! -f "$bootImage" ]; then
-    printf "%s is missing. Aborting.\n" "$bootImage"
-    exit 1
-fi
-if [ ! -f "vendor_boot.img" ]; then
-    printf "vendor_boot.img is missing. Aborting.\n"
-    exit 1
-fi
+# ========================================================
+# Verify images
+# ========================================================
+printf "\n${BLUE}Verifying images...${NC}\n"
 
-requiredImages="dtbo.img vbmeta.img vendor_boot.img vbmeta_system.img super.img"
+# Convert comma-separated to array
+IFS=',' read -ra IMAGE_ARRAY <<< "$IMAGES"
+
 missingImages=""
-
-for img in $requiredImages; do
+for img in "${IMAGE_ARRAY[@]}"; do
     if [ ! -f "$img" ]; then
         missingImages="$missingImages $img"
     fi
 done
 
 if [ -n "$missingImages" ]; then
-    printf "Missing critical images:%s\n" "$missingImages"
-    printf "Some required images are missing. Do you want to continue anyway? (Type 'yes' to continue)\n"
-    read continue
-    if [ "$continue" != "yes" ]; then
-        printf "Aborting flash process.\n"
+    printf "${YELLOW}WARNING: Missing images:%s${NC}\n" "$missingImages"
+    printf "${BLUE}Some images are missing. Do you want to continue anyway? (Type 'yes' to continue): ${NC}"
+    read -r continueFlash
+    if [ "$continueFlash" != "yes" ]; then
+        printf "${RED}Aborting flash process.${NC}\n"
         exit 1
     fi
 fi
 
-printf "Flashing all images...\n"
+printf "${GREEN}Verification completed.${NC}\n"
 
-for img in *.img; do
-    imgName=$(echo "$img" | sed 's/\..*//')
-    if [ "$img" != "$bootImage" ] && [ "$img" != "super.img" ]; then
-        printf "Flashing %s...\n" "$img"
-        "$fastboot" flash "${imgName}_a" "$img"
-        printf "%s flashed successfully.\n" "$img"
+# ========================================================
+# Flash preloader (if exists)
+# ========================================================
+if [ -n "$PRELOADER" ] && [ -f "$PRELOADER" ]; then
+    printf "\n${BLUE}Flashing preloader...${NC}\n"
+    "$fastboot" flash preloader1 "$PRELOADER"
+    "$fastboot" flash preloader2 "$PRELOADER"
+    printf "${GREEN}Preloader flashed successfully.${NC}\n"
+fi
+
+# ========================================================
+# Flash all images from config
+# ========================================================
+printf "\n${BLUE}Flashing images...${NC}\n"
+
+for img in "${IMAGE_ARRAY[@]}"; do
+    if [ -f "$img" ]; then
+        imgName="${img%.*}"
+        
+        # Skip super.img (handled separately)
+        if [ "$img" != "super.img" ]; then
+            # Check if vbmeta image
+            if [[ "$img" == *"vbmeta"* ]]; then
+                if [ "$DISABLE_VERITY" = "yes" ]; then
+                    printf "Flashing %s with verity disabled...\n" "$img"
+                    "$fastboot" flash "${imgName}_a" "$img" --disable-verity --disable-verification
+                else
+                    printf "Flashing %s...\n" "$img"
+                    "$fastboot" flash "${imgName}_a" "$img"
+                fi
+            else
+                printf "Flashing %s...\n" "$img"
+                "$fastboot" flash "${imgName}_a" "$img"
+            fi
+        fi
     fi
 done
 
-printf "Flashing boot image...\n"
-"$fastboot" flash boot_a "$bootImage"
-printf "%s flashed successfully.\n" "$bootImage"
+# ========================================================
+# Flash super image
+# ========================================================
+if [ -f "super.img" ]; then
+    printf "\n${BLUE}Flashing super image...${NC}\n"
+    "$fastboot" flash super super.img
+    printf "${GREEN}super.img flashed successfully.${NC}\n"
+fi
 
-printf "Flashing super image...\n"
-"$fastboot" flash super super.img
-printf "super.img flashed successfully.\n"
-
-printf "Setting active slot...\n"
+# ========================================================
+# Set active slot and reboot
+# ========================================================
+printf "\n${BLUE}Setting active slot...${NC}\n"
 "$fastboot" set_active a
-printf "Slot a activated successfully.\n"
+printf "${GREEN}Slot 'a' activated successfully.${NC}\n"
 
-printf "Flashing process completed. Rebooting...\n"
+printf "\n${GREEN}========================================================${NC}\n"
+printf "${GREEN}              Flashing completed!${NC}\n"
+printf "${GREEN}========================================================${NC}\n"
+printf "${BLUE}Rebooting device...${NC}\n"
 "$fastboot" reboot
+
+exit 0
